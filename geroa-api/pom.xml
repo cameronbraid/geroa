@@ -15,5 +15,36 @@
 			<artifactId>commons-codec</artifactId>
 			<version>1.3</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.mina</groupId>
+			<artifactId>mina-core</artifactId>
+			<version>1.1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.mina</groupId>
+			<artifactId>mina-filter-ssl</artifactId>
+			<version>1.1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.mina</groupId>
+			<artifactId>mina-integration-jmx</artifactId>
+			<version>1.1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.1</version>
+		</dependency>                
+		<dependency>
+			<groupId>org.subethamail</groupId>
+			<artifactId>subethasmtp-smtp</artifactId>
+			<version>1.2</version>
+		</dependency>         
+                <!-- mvn install:install-file -DgroupId=org.masukomi -DartifactId=aspirin-core -Dversion=1.0 -Dpackaging=jar -Dfile=/path/to/file -->
+		<dependency>
+			<groupId>org.masukomi</groupId>
+			<artifactId>aspirin-core</artifactId>
+			<version>1.0</version>
+		</dependency>                
 	</dependencies>
 </project>

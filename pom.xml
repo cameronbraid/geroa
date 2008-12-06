@@ -17,9 +17,11 @@
 	</developers>
 	<modules>
 		<module>geroa-api</module>
+<!--                
 		<module>geroa-impl-memory</module>
 		<module>geroa-impl-filesystem</module>
 		<module>geroa-test</module>
+-->                
 	</modules>
 	<build>
 		<plugins>
