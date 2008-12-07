@@ -21,6 +21,12 @@ class TlsDisabledSmtpServer extends SMTPServer {
     }
 
     @Override
+    public CommandHandler getCommandHandler() {
+        // maybe?
+        return createCommandHandler();
+    }
+
+    
     protected CommandHandler createCommandHandler() {
         ArrayList<Command> availableCommands = new ArrayList<Command>();
         for (CommandRegistry registry : CommandRegistry.values()) {
