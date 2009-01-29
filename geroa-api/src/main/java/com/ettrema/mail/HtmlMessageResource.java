@@ -5,7 +5,8 @@ import java.util.Collection;
 /**
  *
  */
-public interface TextMessage extends Message {
-    public String getTextContent();
+public interface HtmlMessageResource extends MessageResource {
+    String getHtmlContent();
     public Collection<Attachment> getAttachments();
+    
 }

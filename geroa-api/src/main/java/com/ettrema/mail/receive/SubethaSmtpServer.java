@@ -33,11 +33,22 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     private final static Logger log = LoggerFactory.getLogger(SubethaSmtpServer.class);
         
     private SMTPServer smtpReceivingServer;
-    private int smtpPort;
-    private boolean enableTls;
-    private MailResourceFactory resourceFactory;
-    private MailSender mailSender;
-    
+    private final int smtpPort;
+    private final boolean enableTls;
+    private final MailResourceFactory resourceFactory;
+    private final MailSender mailSender;
+
+    public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, MailSender mailSender) {
+        this.smtpPort = smtpPort;
+        this.enableTls = enableTls;
+        this.resourceFactory = resourceFactory;
+        this.mailSender = mailSender;
+    }
+
+    public SubethaSmtpServer(MailResourceFactory resourceFactory, MailSender mailSender) {
+        this(25,false,resourceFactory,mailSender);
+    }
+
     
     public void start() {
         initSmtpReceiver();
@@ -54,6 +65,14 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     public void stop() {
         smtpReceivingServer.stop();
         smtpReceivingServer = null;
+    }
+
+    private String getSubjectDontThrow(MimeMessage mm) {
+        try {
+            return mm.getSubject();
+        } catch (MessagingException ex) {
+            return "[couldnt_read_subject]";
+        }
     }
     
     private void initSmtpReceiver() {
@@ -107,6 +126,8 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
      * Always accept everything when receiving SMTP messages
      */
     public boolean accept(String sFrom, String sRecipient) {
+        System.out.println("accept????");
+        log.debug("accept? " + sFrom + " - " +sRecipient);
         if( sFrom == null || sFrom.length() == 0 ) {
             log.error("Cannot accept email with no from address. Recipient is: " + sRecipient);
             return false;
@@ -142,7 +163,7 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
             Mailbox recipMailbox = resourceFactory.getMailbox(recip);
             if (recipMailbox != null && !recipMailbox.isEmailDisabled()) {
                 log.debug("recipient is known to us, so store: " + recip);
-                recipMailbox.storeMail(mm);
+                storeMail(recipMailbox,mm);
             } else {
                 Mailbox fromMailbox = resourceFactory.getMailbox(from);
                 if (fromMailbox != null && !fromMailbox.isEmailDisabled() ) {
@@ -164,7 +185,16 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
      */
     protected Session getSession() {
         return mailSender.getSession();
-    }    
+    }
+
+    private void storeMail(Mailbox recipMailbox, MimeMessage mm) {
+        try {
+            recipMailbox.storeMail(mm);
+        } catch (Throwable e) {
+            String subject = getSubjectDontThrow(mm);
+            log.error("Exception storing mail. mailbox: " + recipMailbox.getClass() + " message: " + subject,e);
+        }
+    }
 
     /**
      * Creates the AuthHandlerFactory which logs the user/pass.

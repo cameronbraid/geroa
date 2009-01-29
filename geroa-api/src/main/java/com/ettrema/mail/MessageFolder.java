@@ -12,7 +12,7 @@ public interface MessageFolder {
      * 
      * @return - collection of all messages in this folder
      */
-    public Collection<Message> getMessages();
+    public Collection<MessageResource> getMessages();
 
     /**
      * 

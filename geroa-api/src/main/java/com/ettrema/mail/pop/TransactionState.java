@@ -2,9 +2,11 @@ package com.ettrema.mail.pop;
 
 import com.ettrema.mail.Message;
 import com.ettrema.mail.MessageFolder;
+import com.ettrema.mail.MessageResource;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import javax.mail.Address;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
@@ -26,15 +28,16 @@ public class TransactionState extends BaseState {
         this.popSession = popSession;
         inbox = popSession.auth.mbox.getInbox();
         int num = 1;
-        popSession.messageIds = new ArrayList<MessageId>();
-        for (Message m : inbox.getMessages()) {
-            MessageId mid = new MessageId(num++, m);
-            popSession.messageIds.add(mid);
+        Collection<MessageResource> messageResources = inbox.getMessages();
+        popSession.messages = new ArrayList<Message>();
+        for( MessageResource mr : messageResources ) {
+            Message m = new Message(mr, num++);
+            popSession.messages.add(m);
         }
     }
 
     private Message get(PopSession popSession, int num) {
-        return popSession.messageIds.get(num).message;
+        return popSession.messages.get(num);
     }
 
     public void enter(IoSession session, PopSession popSession) {
@@ -48,7 +51,7 @@ public class TransactionState extends BaseState {
     public void uidl(IoSession session, PopSession popSession, String[] args) {
         if (args.length <= 1) {
             popSession.reply(session, "+OK");
-            for (Message m : inbox.getMessages()) {
+            for (Message m : popSession.messages ) {
                 popSession.reply(session, "" + m.getId() + " " + m.hashCode());
             }
             popSession.reply(session, ".");
@@ -67,7 +70,7 @@ public class TransactionState extends BaseState {
     public void list(IoSession session, PopSession popSession, String[] args) {
         if (args.length <= 1) {
             popSession.reply(session, "+OK");
-            for (Message m : inbox.getMessages()) {
+            for (Message m : popSession.messages ) {
                 popSession.reply(session, "" + m.getId() + " " + m.size());
             }
             popSession.reply(session, ".");
@@ -89,7 +92,7 @@ public class TransactionState extends BaseState {
     }
 
     public void stat(IoSession session, PopSession popSession, String[] args) {
-        popSession.reply(session, "+OK " + popSession.messageIds.size() + " " + inbox.totalSize());
+        popSession.reply(session, "+OK " + popSession.messages.size() + " " + inbox.totalSize());
     }
 
     public void retr(IoSession session, PopSession popSession, String[] args) {
@@ -120,9 +123,9 @@ public class TransactionState extends BaseState {
     public void dele(IoSession session, PopSession popSession, String[] args) {
         String sNum = args[1];
         int num = Integer.parseInt(sNum);
-        MessageId mid = popSession.messageIds.get(num);
+        Message mid = popSession.messages.get(num);
         if (mid != null) {
-            mid.deleted = true;
+            mid.markForDeletion();
             popSession.reply(session, "+OK");
             return;
         } else {

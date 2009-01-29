@@ -4,7 +4,7 @@ import com.ettrema.mail.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import org.apache.mina.common.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +15,9 @@ public class PopSession {
     
     PopState state;
     AuthState auth;
-    List<MessageId> messageIds = new ArrayList<MessageId>();
     final MailResourceFactory resourceFactory;
+    Collection<Message> messageResources;
+    ArrayList<Message> messages;
 
     PopSession(IoSession session, final MailResourceFactory resourceFactory) {
         super();

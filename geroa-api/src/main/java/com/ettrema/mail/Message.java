@@ -4,9 +4,37 @@ package com.ettrema.mail;
  *
  * @author brad
  */
-public interface Message {
+public class  Message {
 
-    public void delete();
-    public int getId();
-    public int size();
+    final MessageResource resource;
+    final int id;
+
+    private boolean deleted;
+
+    public Message(MessageResource resource, int id) {
+        this.resource = resource;
+        this.id = id;
+    }
+
+    public void markForDeletion() {
+        deleted = true;
+    }
+
+    public boolean isMarkedForDeletion() {
+        return deleted;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public int size() {
+        return resource.size();
+    }
+
+    public MessageResource getResource() {
+        return resource;
+    }
+
+    
 }
