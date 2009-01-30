@@ -10,4 +10,5 @@ public interface SmtpServer {
 
     void stop();
 
+    int getSmtpPort();
 }

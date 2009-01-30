@@ -27,6 +27,10 @@ public class MinaPopServer implements PopServer {
     private int popPort;
     private MailResourceFactory resourceFactory;
 
+    public MinaPopServer(MailResourceFactory resourceFactory) {
+        this(110, resourceFactory);
+    }
+
     public MinaPopServer(int popPort, MailResourceFactory resourceFactory) {
         this.popPort = popPort;
         this.resourceFactory = resourceFactory;
@@ -108,4 +112,5 @@ public class MinaPopServer implements PopServer {
             session.setAttribute("stateMachine", sess);
         }
     }
+
 }

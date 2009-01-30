@@ -245,7 +245,21 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
             return false;
         }
 
-    }    
+    }
 
-    
+    public int getSmtpPort() {
+        return smtpPort;
+    }
+
+    public boolean isEnableTls() {
+        return enableTls;
+    }
+
+    public MailSender getMailSender() {
+        return mailSender;
+    }
+
+    public MailResourceFactory getResourceFactory() {
+        return resourceFactory;
+    }
 }

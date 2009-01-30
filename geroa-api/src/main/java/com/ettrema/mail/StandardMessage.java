@@ -9,48 +9,72 @@ import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public class StandardMessage {
 
+    private final static Logger log = LoggerFactory.getLogger(StandardMessage.class);
+
     public static StandardMessage parse(MimeMessage mm) throws IOException, MessagingException {
+        String text = "";
+        String html = "";
+        List<Attachment> attachments = new ArrayList<Attachment>();
         Object o = mm.getContent();
         if (o instanceof String) {
-            String s = (String) o;
-            return new StandardMessage(s);
+            text = (String) o;
         } else if (o instanceof MimeMultipart) {
-            String s = "";
             MimeMultipart multi = (MimeMultipart) o;
-            List<Attachment> attachments = new ArrayList<Attachment>();
             for (int i = 0; i < multi.getCount(); i++) {
                 BodyPart bp = multi.getBodyPart(i);
                 String disp = bp.getDisposition();
-                if( disp == null ) {
-                    // determine based on mime type
-                } else if( disp.equals(Part.ATTACHMENT) || disp.equals(Part.INLINE)) {
-                    // handle attachment
+                if ((disp != null) && (disp.equals(Part.ATTACHMENT) || disp.equals(Part.INLINE))) {
+                    addAttachment(bp, attachments);
                 } else {
-                    // determine based on mime type
-                }
-                String ct = bp.getContentType();
-                if( ct.contains("html")) {
-                    Object o2 = bp.getContent();
-                    if (o2 instanceof String) {
-                        s += (String) o2;
+                    String ct = bp.getContentType();
+                    if (ct.contains("html")) {
+                        html += getStringContent(bp);
+                    } else if (ct.contains("text")) {
+                        text += getStringContent(bp);
+                    } else {  // binary
+                        addAttachment(bp, attachments);
                     }
-                } else if(ct.contains("text")){
-
-                } else {  // binary
-
                 }
             }
-
         } else {
+            log.warn("Unknown content type: " + o.getClass() + ". expected string or MimeMultipart");
         }
-        return null;
+        return new StandardMessage(html, text, attachments);
     }
+
+    private static void addAttachment(BodyPart bp, List<Attachment> attachments) {
+        FileSystemAttachment att = FileSystemAttachment.parse(bp);
+        attachments.add(att);
+    }
+
+    private static String getStringContent(BodyPart bp) {
+        try {
+            Object o2 = bp.getContent();
+            if (o2 == null) {
+                return "";
+            }
+            if (o2 instanceof String) {
+                return (String) o2;
+            } else {
+                log.warn("Unknown content type: " + o2.getClass());
+                return o2.toString();
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        } catch (MessagingException ex) {
+            throw new RuntimeException(ex);
+        }
+
+    }
+
 
     private String html;
     private String text;
@@ -62,10 +86,9 @@ public class StandardMessage {
         this.attachments = attachments;
     }
 
-    public StandardMessage( String text) {
-        this(null,text,null);
+    public StandardMessage(String text) {
+        this(null, text, null);
     }
-
 
     public String getHtmlContent() {
         return html;

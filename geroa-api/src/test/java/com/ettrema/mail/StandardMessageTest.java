@@ -1,5 +1,6 @@
 package com.ettrema.mail;
 
+import com.ettrema.mail.mock.MockMailSender; 
 import com.bradmcevoy.io.ReadingException;
 import com.bradmcevoy.io.StreamToStream;
 import com.bradmcevoy.io.WritingException;
@@ -11,7 +12,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.List;
 import java.util.Properties;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -35,6 +35,8 @@ public class StandardMessageTest extends TestCase {
 
     private MailSender mailSender;
     private SmtpServer server;
+
+    private StandardMessage standardMessage;
 
     @Override
     protected void setUp() throws Exception {
@@ -96,6 +98,7 @@ public class StandardMessageTest extends TestCase {
         DataSource fds = new ByteArrayDataSource(in2, "image/jpeg");
         messageBodyPart.setDataHandler(new DataHandler(fds));
         messageBodyPart.setHeader("Content-ID", "<a1>");
+        messageBodyPart.setFileName("testImage.jpg");
 
 // Add part to multi-part
         multipart.addBodyPart(messageBodyPart);
@@ -108,37 +111,13 @@ public class StandardMessageTest extends TestCase {
         System.out.println("done sending message");
 
         Thread.sleep(1000);
-    }
 
-    class MockMailSender implements MailSender {
+        assertNotNull(standardMessage);
+        assertEquals(HTML_TEXT, standardMessage.getHtmlContent());
+        Collection col = standardMessage.getAttachments();
+        assertEquals(1, col.size());
 
-        public void start() {
-
-        }
-
-        public void stop() {
-
-        }
-
-        public void sendMail(String fromAddress, String fromPersonal, List<String> to, String replyTo, String subject, String text) {
-
-        }
-
-        public Session getSession() {
-            return null;
-        }
-
-        public void sendMail(MimeMessage mm) {
-
-        }
-
-        public MimeMessage newMessage(MimeMessage mm) {
-            return null;
-        }
-
-        public MimeMessage newMessage() {
-            return null;
-        }
+        System.out.println("HTML: " + standardMessage.getHtmlContent());
 
     }
 
@@ -147,12 +126,9 @@ public class StandardMessageTest extends TestCase {
         @Override
         public void storeMail(MimeMessage mm) {
             System.out.println("*************** storeMail");
-            Collection<Attachment> col;
             try {
-                StandardMessage sm = StandardMessage.parse(mm);
-                assertEquals(HTML_TEXT, sm.getHtmlContent());
-                col = sm.getAttachments();
-                assertEquals(1, col.size());
+                standardMessage = StandardMessage.parse(mm);
+                System.out.println("done storing");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             } catch (MessagingException ex) {

@@ -56,5 +56,17 @@ public class MailServer {
         log.debug("...done stopping mail servers");
     }
 
+    public MailSender getMailSender() {
+        return mailSender;
+    }
 
+    public PopServer getPopServer() {
+        return popServer;
+    }
+
+    public SmtpServer getSmtpServer() {
+        return smtpServer;
+    }
+
+    
 }

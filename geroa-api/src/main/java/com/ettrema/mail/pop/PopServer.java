@@ -7,5 +7,6 @@ package com.ettrema.mail.pop;
 public interface PopServer {
     void start();
     void stop();
-    
+
+    int getPopPort();
 }

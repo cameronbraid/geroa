@@ -1,8 +1,5 @@
 package com.ettrema.mail;
 
-import java.io.InputStream;
-import java.util.concurrent.Callable;
-
 /**
  *  Represents an attachment to an email
  */
@@ -22,5 +19,5 @@ public interface Attachment {
      *
      * @param exec - closure which will consume the stream of data
      */
-    void useData(Callable<InputStream> exec);
+    void useData(InputStreamConsumer exec);
 }

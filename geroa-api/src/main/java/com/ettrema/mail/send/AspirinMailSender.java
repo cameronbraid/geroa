@@ -25,15 +25,17 @@ public class AspirinMailSender implements MailSender, MailWatcher {
         if (theInstance != null) {
             throw new RuntimeException("Instance already created");
         }
-        System.setProperty("aspirinRetryInterval", retryInterval + "");
-        System.setProperty("aspirinDeliverThreads", deliveryThreads + "");
-        System.setProperty("aspirinPostmaster", postmaster);
-        System.setProperty("aspirinMaxAttempts", maxRetries + "");
-        return new AspirinMailSender();
+        return new AspirinMailSender(retryInterval, deliveryThreads, postmaster, maxRetries);
     }
 
     private boolean started;
-    
+
+    public AspirinMailSender() {
+        this(1000, 2, "admin@localhost", 3);
+    }
+
+
+
     /**
      * 
      * @param retryInterval - eg 1000
@@ -41,8 +43,11 @@ public class AspirinMailSender implements MailSender, MailWatcher {
      * @param postmaster - eg admin@ettrema.com
      * @param maxRetries - eg 3
      */
-    private AspirinMailSender() {
-        
+    public AspirinMailSender(int retryInterval, int deliveryThreads, String postmaster, int maxRetries) {
+        System.setProperty("aspirinRetryInterval", retryInterval + "");
+        System.setProperty("aspirinDeliverThreads", deliveryThreads + "");
+        System.setProperty("aspirinPostmaster", postmaster);
+        System.setProperty("aspirinMaxAttempts", maxRetries + "");
     }
 
     public void sendMail(MimeMessage mm) {
