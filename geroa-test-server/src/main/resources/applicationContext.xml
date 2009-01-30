@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+    <bean id="mailResourceFactory" class="com.ettrema.mail.MemoryMailResourceFactory">
+        <property name="mailboxNames">
+            <list>
+                <value>testuser</value>
+            </list>
+        </property>
+   </bean>
+
+    <bean id="popServer" class="com.ettrema.mail.pop.MinaPopServer">
+        <constructor-arg ref="mailResourceFactory" />
+    </bean>
+
+    <bean id="mailSender" class="com.ettrema.mail.send.AspirinMailSender" />
+
+    <bean id="smtpServer" class="com.ettrema.mail.receive.SubethaSmtpServer" >
+        <constructor-arg ref="mailResourceFactory" />
+        <constructor-arg ref="mailSender" />
+    </bean>
+
+    <bean id="mailServer" class="com.ettrema.mail.MailServer">
+        <constructor-arg ref="mailSender" />
+        <constructor-arg ref="smtpServer" />
+        <constructor-arg ref="popServer" />
+    </bean>
+</beans>
