@@ -5,19 +5,29 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public class MemoryMailbox implements Mailbox{
 
+    private final static Logger log = LoggerFactory.getLogger(MemoryMailbox.class);
+
     String password;
     Map<String,MessageFolder> folders;
 
     public MemoryMailbox() {
         folders = new HashMap<String, MessageFolder>();
-        addFolder("inbox");
+        MemoryMessageFolder folder = addFolder("inbox");
+        for( int i=0; i<50; i++) {
+            addMockMessage(folder, "hi there " + i); // todo: move this to test config
+        }
+        this.password = "password";
     }
 
     public boolean authenticate(String password) {
@@ -46,9 +56,20 @@ public class MemoryMailbox implements Mailbox{
         folder.messages.add(res);
     }
 
-    public void addFolder(String name) {
+    public MemoryMessageFolder addFolder(String name) {
         MemoryMessageFolder folder = new MemoryMessageFolder();
         folders.put(name,folder);
+        return folder;
+    }
+
+    private void addMockMessage(MemoryMessageFolder folder, String subject) {
+        try {
+            MimeMessage msg = new MimeMessage((Session) null);
+            msg.setSubject(subject);
+            folder.messages.add(new MemoryMessageResource(folder, msg));
+        } catch (MessagingException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public class MemoryMessageFolder implements MessageFolder {
@@ -65,7 +86,10 @@ public class MemoryMailbox implements Mailbox{
 
         public int totalSize() {
             int size = 0;
-            //for( me)
+            for( MessageResource res : messages ) {
+                size += res.size();
+            }
+            log.debug("total size: " + size);
             return size;
         }
 
@@ -74,11 +98,11 @@ public class MemoryMailbox implements Mailbox{
     public class MemoryMessageResource implements MessageResource {
 
         MemoryMessageFolder folder;
-        Object data;
+        MimeMessage message;
 
-        public MemoryMessageResource(MemoryMessageFolder folder, Object data) {
+        public MemoryMessageResource(MemoryMessageFolder folder, MimeMessage message) {
             this.folder = folder;
-            this.data = data;
+            this.message = message;
         }
 
         public void delete() {
@@ -86,8 +110,23 @@ public class MemoryMailbox implements Mailbox{
         }
 
         public int size() {
-            return 10; // todo
+            try {
+                int i = message.getSize();
+                log.debug("message size: " + i);
+                if( i < 0 ) {
+                    log.warn("negative size from resource: " + i + ". returning 1 instead");
+                    i = 1;
+                }
+                return i;
+            } catch (MessagingException ex) {
+                throw new RuntimeException(ex);
+            }
         }
+
+        public MimeMessage getMimeMessage() {
+            return message;
+        }
+
 
     }
 

@@ -12,7 +12,7 @@ public class GreetingState implements PopState {
     }
 
     public void enter(IoSession session, PopSession popSession) {
-        popSession.reply(session, "+OK POP3 server ready <1896.697170952@dbc.mtview.ca.us>"); //todo
+        popSession.reply(session, "+OK POP3 ready"); //todo
         popSession.transitionTo(session, new AuthState(popSession));
     }
 

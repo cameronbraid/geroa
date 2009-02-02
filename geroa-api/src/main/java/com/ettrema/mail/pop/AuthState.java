@@ -18,6 +18,7 @@ public class AuthState extends BaseState {
     }
     
     public void enter(IoSession session, PopSession popSession) {
+        log.debug("now in authstate");
     }
 
     public void exit(IoSession session, PopSession popSession) {
@@ -32,12 +33,13 @@ public class AuthState extends BaseState {
 
     public void user(IoSession session, PopSession popSession, String[] args) {
         user = args[1];
+        log.debug("user: " + user);
         MailboxAddress add;
         try {
             add = MailboxAddress.parse(user);
             mbox = popSession.resourceFactory.getMailbox(add);
             if (mbox != null) {
-                popSession.reply(session, "+OK User accepted");
+                popSession.reply(session, "+OK");
             } else {
                 log.debug("mailbox not found: " + add);
                 popSession.reply(session, "-ERR");
@@ -48,13 +50,20 @@ public class AuthState extends BaseState {
     }
 
     public void pass(IoSession session, PopSession popSession, String[] args) {
-        pass = args[1];
+        if( args.length > 1 ) {
+            pass = args[1];
+        } else {
+            pass = "";
+        }
+        log.debug("pass: " + pass);
         if (mbox == null) {
             log.debug("no current mailbox");
             popSession.reply(session, "-ERR");
         } else {
             if (mbox.authenticate(pass)) {
-                popSession.reply(session, "+OK Password accepted");
+                popSession.reply(session, "+OK Mailbox locked and ready SESSIONID=<slot111-3708-1233538479-1>");
+                // s("+OK Mailbox locked and ready SESSIONID=<slot111-3708-1233538479-1>\015\012");
+
                 popSession.auth = this;
                 popSession.transitionTo(session, new TransactionState(popSession));
             } else {
@@ -67,6 +76,7 @@ public class AuthState extends BaseState {
 
     public void apop(IoSession session, PopSession popSession, String[] args) {
         user = args[1];
+        log.debug("apop: " + user);
         MailboxAddress add;
         try {
             add = MailboxAddress.parse(user);
@@ -74,7 +84,7 @@ public class AuthState extends BaseState {
             if (mbox != null) {
                 String md5Pass = args[2];
                 if (mbox.authenticateMD5(md5Pass.getBytes())) {
-                    popSession.reply(session, "+OK User accepted");
+                    popSession.reply(session, "+OK");
                     popSession.auth = this;
                     popSession.transitionTo(session, new TransactionState(popSession));
                 } else {

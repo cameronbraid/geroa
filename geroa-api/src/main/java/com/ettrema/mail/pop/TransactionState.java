@@ -7,11 +7,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import javax.mail.Address;
-import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import org.apache.mina.common.IoSession;
 import org.slf4j.Logger;
@@ -41,7 +38,8 @@ public class TransactionState extends BaseState {
     }
 
     public void enter(IoSession session, PopSession popSession) {
-        popSession.reply(session, "+OK " + popSession.auth.user + " has " + inbox.numMessages() + " messages (" + inbox.totalSize() + " octets)");
+        // don't know what this is doing here..
+//        popSession.reply(session, "+OK " + popSession.auth.user + " has " + inbox.numMessages() + " messages (" + inbox.totalSize() + " octets)");
         log.info("entering transaction state");
     }
 
@@ -68,6 +66,7 @@ public class TransactionState extends BaseState {
     }
 
     public void list(IoSession session, PopSession popSession, String[] args) {
+        log.debug("list: " + args.length);
         if (args.length <= 1) {
             popSession.reply(session, "+OK");
             for (Message m : popSession.messages ) {
@@ -92,7 +91,8 @@ public class TransactionState extends BaseState {
     }
 
     public void stat(IoSession session, PopSession popSession, String[] args) {
-        popSession.reply(session, "+OK " + popSession.messages.size() + " " + inbox.totalSize());
+        // popSession.reply(session, "+OK " + popSession.messages.size() + " " + inbox.totalSize());
+        popSession.reply(session, "+OK " + popSession.messages.size() + " 123450");
     }
 
     public void retr(IoSession session, PopSession popSession, String[] args) {
@@ -105,9 +105,9 @@ public class TransactionState extends BaseState {
             try {
                 popSession.reply(session, "+OK " + m.size() + " octets");
                 Session mailSess = null;
-                MimeMessage mm = new MimeMessage(mailSess);
-                Address add = new InternetAddress();
-                mm.addRecipient(RecipientType.TO, add);
+
+                // ummm...i think we need to do something more meaningful here...
+                MimeMessage mm = m.getResource().getMimeMessage();
                 ByteArrayOutputStream bout = new ByteArrayOutputStream();
                 mm.writeTo(bout);
                 session.write(bout.toByteArray());

@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.UUID;
 import org.apache.mina.common.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,8 @@ import org.slf4j.LoggerFactory;
 public class PopSession {
 
     private final static Logger log = LoggerFactory.getLogger(PopSession.class);
-    
+
+    UUID sessionId;
     PopState state;
     AuthState auth;
     final MailResourceFactory resourceFactory;
@@ -21,6 +23,7 @@ public class PopSession {
 
     PopSession(IoSession session, final MailResourceFactory resourceFactory) {
         super();
+        sessionId = UUID.randomUUID();
         this.resourceFactory = resourceFactory;
         state = new GreetingState(this);
         state.enter(session, this);
@@ -62,7 +65,10 @@ public class PopSession {
 
     void reply(IoSession session, String msg) {
         log.info("reply: " + msg);
-        session.write(msg + "\n");
+        log.info("..length: " + msg.length());
+//        session.write(msg + (char)13 + (char)10);
+                session.write(msg + (char)13);
+//        session.write(msg + "\n");
     }
 
     void replyMultiline(IoSession session, String content) {
