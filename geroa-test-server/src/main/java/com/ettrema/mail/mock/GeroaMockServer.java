@@ -8,6 +8,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  *
  */
 public class GeroaMockServer {
+
     ApplicationContext context;
     private MailServer mailServer;
 
@@ -17,16 +18,12 @@ public class GeroaMockServer {
     }
 
     public GeroaMockServer() {
+    }
 
-        context = new ClassPathXmlApplicationContext(new String[] {"applicationContext.xml"});
+    public void start() {
+        context = new ClassPathXmlApplicationContext(new String[]{"applicationContext.xml"});
         mailServer = (MailServer) context.getBean("mailServer");
         mailServer.start();
-        System.out.println("mock server is running on smtp port: " + mailServer.getSmtpServer().getSmtpPort() + " and pop port: " + mailServer.getPopServer().getPopPort() );
-}
-
-
-
-    private void start() {
-
+        System.out.println("mock server is running on smtp port: " + mailServer.getSmtpServer().getSmtpPort() + " and pop port: " + mailServer.getPopServer().getPopPort());
     }
 }
