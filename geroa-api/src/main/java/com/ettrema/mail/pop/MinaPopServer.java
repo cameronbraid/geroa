@@ -12,6 +12,7 @@ import org.apache.mina.common.IoSession;
 import org.apache.mina.common.SimpleByteBufferAllocator;
 import org.apache.mina.common.TransportType;
 import org.apache.mina.filter.LoggingFilter;
+import org.apache.mina.filter.StreamWriteFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
@@ -45,9 +46,10 @@ public class MinaPopServer implements PopServer {
         acceptor = new SocketAcceptor();
 
         SocketAcceptorConfig cfg = new SocketAcceptorConfig();
-        cfg.getFilterChain().addLast("logger", new LoggingFilter());
-
+//        cfg.getFilterChain().addLast("mimemessage1", new MimeMessageIOFilter() );
+        cfg.getFilterChain().addLast("logger", new LoggingFilter());        
         cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("US-ASCII"))));
+        cfg.getFilterChain().addLast("stream", new StreamWriteFilter() );
         try {
             //cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
             acceptor.bind(new InetSocketAddress(popPort), new PopIOHandlerAdapter(), cfg);

@@ -1,15 +1,15 @@
 package com.ettrema.mail.pop;
 
+import com.bradmcevoy.io.ChunkWriter;
+import com.bradmcevoy.io.ChunkingOutputStream;
 import com.ettrema.mail.Message;
 import com.ettrema.mail.MessageFolder;
 import com.ettrema.mail.MessageResource;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import javax.mail.MessagingException;
 import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
+import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 public class TransactionState extends BaseState {
 
     private final static Logger log = LoggerFactory.getLogger(TransactionState.class);
-    
     MessageFolder inbox;
 
     TransactionState(PopSession popSession) {
@@ -27,14 +26,14 @@ public class TransactionState extends BaseState {
         int num = 1;
         Collection<MessageResource> messageResources = inbox.getMessages();
         popSession.messages = new ArrayList<Message>();
-        for( MessageResource mr : messageResources ) {
+        for (MessageResource mr : messageResources) {
             Message m = new Message(mr, num++);
             popSession.messages.add(m);
         }
     }
 
     private Message get(PopSession popSession, int num) {
-        return popSession.messages.get(num);
+        return popSession.messages.get(num - 1);
     }
 
     public void enter(IoSession session, PopSession popSession) {
@@ -49,7 +48,7 @@ public class TransactionState extends BaseState {
     public void uidl(IoSession session, PopSession popSession, String[] args) {
         if (args.length <= 1) {
             popSession.reply(session, "+OK");
-            for (Message m : popSession.messages ) {
+            for (Message m : popSession.messages) {
                 popSession.reply(session, "" + m.getId() + " " + m.hashCode());
             }
             popSession.reply(session, ".");
@@ -69,7 +68,7 @@ public class TransactionState extends BaseState {
         log.debug("list: " + args.length);
         if (args.length <= 1) {
             popSession.reply(session, "+OK");
-            for (Message m : popSession.messages ) {
+            for (Message m : popSession.messages) {
                 popSession.reply(session, "" + m.getId() + " " + m.size());
             }
             popSession.reply(session, ".");
@@ -95,35 +94,38 @@ public class TransactionState extends BaseState {
         popSession.reply(session, "+OK " + popSession.messages.size() + " 123450");
     }
 
-    public void retr(IoSession session, PopSession popSession, String[] args) {
+    public void retr(final IoSession session, PopSession popSession, String[] args) {
         String sNum = args[1];
         int num = Integer.parseInt(sNum);
         Message m = get(popSession, num);
+
         if (m == null) {
             popSession.reply(session, "-ERR no such message");
         } else {
             try {
                 popSession.reply(session, "+OK " + m.size() + " octets");
                 Session mailSess = null;
-
-                // ummm...i think we need to do something more meaningful here...
-                MimeMessage mm = m.getResource().getMimeMessage();
-                ByteArrayOutputStream bout = new ByteArrayOutputStream();
-                mm.writeTo(bout);
-                session.write(bout.toByteArray());
+                ChunkWriter store = new ChunkWriter() {
+                    public void newChunk(int i, byte[] data) {
+                        ByteBuffer bb = ByteBuffer.wrap(data);
+                        session.write(bb);
+                    }
+                };
+                ChunkingOutputStream out = new ChunkingOutputStream(store, 1024);
+                m.getResource().writeTo(out);
+                out.flush();
                 popSession.reply(session, ".");
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
-            } catch (MessagingException ex) {
-                throw new RuntimeException(ex);
             }
+
         }
     }
 
     public void dele(IoSession session, PopSession popSession, String[] args) {
         String sNum = args[1];
         int num = Integer.parseInt(sNum);
-        Message mid = popSession.messages.get(num);
+        Message mid = get(popSession, num);
         if (mid != null) {
             mid.markForDeletion();
             popSession.reply(session, "+OK");

@@ -1,14 +1,29 @@
 package com.ettrema.mail;
 
-import javax.mail.internet.MimeMessage;
+import java.io.OutputStream;
 
 /**
  *
  */
 public interface MessageResource {
-    public void delete();
+    /**
+     * physically delete the resource
+     */
+    void delete();
 
-    public int size();
+    /**
+     *
+     *
+     * @return - the size of the message when formatted as a mime message
+     */
+    int size();
 
-    MimeMessage getMimeMessage();
+    /**
+     * write the message in mime format to the given output stream
+     *
+     * this will usually be implemented as mimeMessage.writeTo(out);
+     *
+     * @param out
+     */
+    void writeTo(OutputStream out);
 }

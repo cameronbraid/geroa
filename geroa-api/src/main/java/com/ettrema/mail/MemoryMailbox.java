@@ -1,10 +1,13 @@
 package com.ettrema.mail;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -24,9 +27,9 @@ public class MemoryMailbox implements Mailbox{
     public MemoryMailbox() {
         folders = new HashMap<String, MessageFolder>();
         MemoryMessageFolder folder = addFolder("inbox");
-        for( int i=0; i<50; i++) {
-            addMockMessage(folder, "hi there " + i); // todo: move this to test config
-        }
+//        for( int i=0; i<50; i++) {
+//            addMockMessage(folder, "hi there " + i); // todo: move this to test config
+//        }
         this.password = "password";
     }
 
@@ -127,7 +130,14 @@ public class MemoryMailbox implements Mailbox{
             return message;
         }
 
-
+        public void writeTo(OutputStream out) {
+            try {
+                message.writeTo(out);
+            } catch (IOException ex) {
+                log.error("exception writing data",ex);
+            } catch (MessagingException ex) {
+                log.error("exception writing data",ex);
+            }
+        }
     }
-
 }
