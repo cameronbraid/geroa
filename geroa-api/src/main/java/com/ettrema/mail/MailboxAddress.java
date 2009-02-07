@@ -1,6 +1,9 @@
 
 package com.ettrema.mail;
 
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+
 public class MailboxAddress {
     public final String user;
     public final String domain;
@@ -22,6 +25,15 @@ public class MailboxAddress {
     @Override
     public String toString() {
         return user + "@" + domain;
+    }
+
+    public InternetAddress toInternetAddress() {
+        try {
+            InternetAddress ia = new InternetAddress(user + "@" + domain);
+            return ia;
+        } catch (AddressException ex) {
+            throw new RuntimeException(ex);
+        }
     }
     
     

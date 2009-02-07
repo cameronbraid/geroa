@@ -5,19 +5,19 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
- *
+ ** Demonstrates initialising the Geroa Server using spring, and then starting it
  */
-public class GeroaMockServer {
+public class GeroaTestServer {
 
     ApplicationContext context;
     private MailServer mailServer;
 
     public static void main(String[] args) {
-        GeroaMockServer server = new GeroaMockServer();
+        GeroaTestServer server = new GeroaTestServer();
         server.start();
     }
 
-    public GeroaMockServer() {
+    public GeroaTestServer() {
     }
 
     public void start() {

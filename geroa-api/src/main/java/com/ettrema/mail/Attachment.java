@@ -20,4 +20,10 @@ public interface Attachment {
      * @param exec - closure which will consume the stream of data
      */
     void useData(InputStreamConsumer exec);
+
+    /**
+     *
+     * @return - the size in bytes of the attachment
+     */
+    int size();
 }

@@ -90,8 +90,7 @@ public class TransactionState extends BaseState {
     }
 
     public void stat(IoSession session, PopSession popSession, String[] args) {
-        // popSession.reply(session, "+OK " + popSession.messages.size() + " " + inbox.totalSize());
-        popSession.reply(session, "+OK " + popSession.messages.size() + " 123450");
+        popSession.reply(session, "+OK " + popSession.messages.size() + " " + inbox.totalSize());
     }
 
     public void retr(final IoSession session, PopSession popSession, String[] args) {
@@ -102,22 +101,23 @@ public class TransactionState extends BaseState {
         if (m == null) {
             popSession.reply(session, "-ERR no such message");
         } else {
+            popSession.reply(session, "+OK " + m.size() + " octets");
+            Session mailSess = null;
+            ChunkWriter store = new ChunkWriter() {
+
+                public void newChunk(int i, byte[] data) {
+                    ByteBuffer bb = ByteBuffer.wrap(data);
+                    session.write(bb);
+                }
+            };
+            ChunkingOutputStream out = new ChunkingOutputStream(store, 1024);
             try {
-                popSession.reply(session, "+OK " + m.size() + " octets");
-                Session mailSess = null;
-                ChunkWriter store = new ChunkWriter() {
-                    public void newChunk(int i, byte[] data) {
-                        ByteBuffer bb = ByteBuffer.wrap(data);
-                        session.write(bb);
-                    }
-                };
-                ChunkingOutputStream out = new ChunkingOutputStream(store, 1024);
                 m.getResource().writeTo(out);
                 out.flush();
-                popSession.reply(session, ".");
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
+            } catch (Exception e) {
+                log.error("exception sending message", e);
             }
+            popSession.reply(session, ".");
 
         }
     }

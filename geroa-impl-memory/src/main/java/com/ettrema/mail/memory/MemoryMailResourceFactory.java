@@ -1,5 +1,6 @@
-package com.ettrema.mail;
+package com.ettrema.mail.memory;
 
+import com.ettrema.mail.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,7 @@ public class MemoryMailResourceFactory implements MailResourceFactory{
 
     public void setMailboxNames(List<String> names) {
         for( String name : names) {
-            addMailbox(new MemoryMailbox(), name);
+            addMailbox(new MemoryMailBox(), name);
         }
     }
 }

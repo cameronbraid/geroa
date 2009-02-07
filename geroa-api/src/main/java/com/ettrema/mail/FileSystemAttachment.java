@@ -65,4 +65,11 @@ public class FileSystemAttachment implements Attachment {
             Utils.close(fin);
         }
     }
+
+    public int size() {
+        long l = file.length();
+        return (int) l;
+    }
+
+
 }

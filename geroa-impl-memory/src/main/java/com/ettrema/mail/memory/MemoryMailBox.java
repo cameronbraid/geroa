@@ -1,47 +1,53 @@
 package com.ettrema.mail.memory;
 
-import com.ettrema.mail.MailUtils;
 import com.ettrema.mail.Mailbox;
 import com.ettrema.mail.MessageFolder;
-import java.security.NoSuchAlgorithmException;
+import com.ettrema.mail.MessageResource;
+import com.ettrema.mail.StandardMessage;
+import com.ettrema.mail.StandardMessageFactory;
+import com.ettrema.mail.StandardMessageFactoryImpl;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public class MemoryMailBox implements Mailbox{
 
-    String name;
+    private final static Logger log = LoggerFactory.getLogger(MemoryMailBox.class);
+
+    private static final StandardMessageFactory factory = new StandardMessageFactoryImpl();
+
     String password;
-    boolean disabled;
+    Map<String,MessageFolder> folders;
 
-    Map<String,MemoryMessageFolder> folders = new HashMap<String,MemoryMessageFolder>();
-
-    public MemoryMailBox(String name, String password) {
-        this.name = name;
-        this.password = password;
-        this.folders.put("inbox", new MemoryMessageFolder());
+    public MemoryMailBox() {
+        folders = new HashMap<String, MessageFolder>();
+        MemoryMessageFolder folder = addFolder("inbox");
+//        for( int i=0; i<50; i++) {
+//            addMockMessage(folder, "hi there " + i); // todo: move this to test config
+//        }
+        this.password = "password";
     }
 
-
-
     public boolean authenticate(String password) {
-        if( this.password == null ) {
-            return password==null;
-        } else {
-            return this.password.equals(password);
-        }
+        return password.equals(this.password);
     }
 
     public boolean authenticateMD5(byte[] passwordHash) {
-        try {
-            byte[] actual = MailUtils.md5Digest(this.password);
-            return java.util.Arrays.equals(actual, passwordHash);
-        } catch (NoSuchAlgorithmException ex) {
-            throw new RuntimeException(ex);
-        }
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public MessageFolder getInbox() {
@@ -53,11 +59,88 @@ public class MemoryMailBox implements Mailbox{
     }
 
     public boolean isEmailDisabled() {
-        return disabled;
+        return false;
     }
 
     public void storeMail(MimeMessage mm) {
-        getInbox().getMessages().add(mm);
+
+        try {
+            File f = new File("c:\\test.smtp");
+            FileOutputStream fos = new FileOutputStream(f);
+            mm.writeTo(fos);
+            fos.close();
+        } catch (IOException iOException) {
+            iOException.printStackTrace();
+        } catch (MessagingException messagingException) {
+            messagingException.printStackTrace();
+        }
+
+        MemoryMessageFolder folder = (MemoryMessageFolder) getInbox();
+        MemoryMessageResource res = new MemoryMessageResource(folder, mm);
+        folder.messages.add(res);
     }
 
+    public MemoryMessageFolder addFolder(String name) {
+        MemoryMessageFolder folder = new MemoryMessageFolder();
+        folders.put(name,folder);
+        return folder;
+    }
+
+    private void addMockMessage(MemoryMessageFolder folder, String subject) {
+        try {
+            MimeMessage msg = new MimeMessage((Session) null);
+            msg.setSubject(subject);
+            folder.messages.add(new MemoryMessageResource(folder, msg));
+        } catch (MessagingException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public class MemoryMessageFolder implements MessageFolder {
+
+        List<MessageResource> messages = new ArrayList<MessageResource>();
+
+        public Collection<MessageResource> getMessages() {
+            return messages;
+        }
+
+        public int numMessages() {
+            return messages.size();
+        }
+
+        public int totalSize() {
+            int size = 0;
+            for( MessageResource res : messages ) {
+                size += res.size();
+            }
+            log.debug("total size: " + size);
+            return size;
+        }
+
+    }
+
+    public class MemoryMessageResource implements MessageResource {
+
+        MemoryMessageFolder folder;
+        StandardMessage message;
+
+        public MemoryMessageResource(MemoryMessageFolder folder, MimeMessage mimeMessage) {
+            this.folder = folder;
+            this.message = factory.toStandardMessage(mimeMessage);
+            if( message.getText() == null || message.getText().length() == 0 ) throw new IllegalArgumentException("no text content");
+        }
+
+        public void delete() {
+            folder.messages.remove(this);
+        }
+
+        public int size() {
+            int i = message.size();
+            return i;
+        }
+
+        public void writeTo(OutputStream out) {
+            message.writeTo(out);
+        }
+    }
 }

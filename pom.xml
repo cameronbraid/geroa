@@ -17,10 +17,13 @@
 	</developers>
 	<modules>
 		<module>geroa-api</module>
+		<module>geroa-test-server</module>
+		<module>geroa-server</module>
+
 <!--                
+
 		<module>geroa-impl-memory</module>
 		<module>geroa-impl-filesystem</module>
-		<module>geroa-test</module>
 -->                
 	</modules>
 	<build>
@@ -58,9 +61,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>1.5.2</version>
-			<scope>test</scope>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
