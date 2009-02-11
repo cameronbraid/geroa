@@ -1,171 +1,82 @@
 package com.ettrema.mail;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- *
+ *  Interface which describes a standard message. This is a representation of
+ *  an email which can have text, html and attachments. Use the StandardMessageFactory
+ *  to populate these from a MimeMessage and to convert back again
  */
-public class StandardMessage {
+public interface StandardMessage {
 
-    private final static Logger log = LoggerFactory.getLogger(StandardMessage.class);
+    public List<StandardMessage> getAttachedMessages();
 
-    private MailboxAddress from;
-    private MailboxAddress replyTo;
-    private List<MailboxAddress> to = new ArrayList<MailboxAddress>();
-    private List<MailboxAddress> cc = new ArrayList<MailboxAddress>();
-    private List<MailboxAddress> bcc = new ArrayList<MailboxAddress>();
-    private String subject;
-    private String html;
-    private String text;
-    private List<Attachment> attachments = new ArrayList<Attachment>();
-    private List<StandardMessage> attachedMessages = new ArrayList<StandardMessage>();
-    private int size;
-    private String disposition;
-    private String encoding;
-    private String contentLanguage;
-    private Map<String,String> headers;
-
-    public List<StandardMessage> getAttachedMessages() {
-        return attachedMessages;
-    }
-
-    public void setAttachedMessages(List<StandardMessage> attachedMessages) {
-        this.attachedMessages = attachedMessages;
-    }
-
+    public void setAttachedMessages(List<StandardMessage> attachedMessages);
+   
+    public String getSubject();
     
+    public MailboxAddress getFrom();
 
-    public String getSubject() {
-        return subject;
-    }
-    
-    public MailboxAddress getFrom() {
-        return from;
-    }
+    public List<Attachment> getAttachments();
 
-    public int size() {
-        return size;
-    }
+    public void setFrom(MailboxAddress from);
 
-    public List<Attachment> getAttachments() {
-        return attachments;
-    }
+    public MailboxAddress getReplyTo();
 
-    public void setFrom(MailboxAddress from) {
-        this.from = from;
-    }
-
-    public MailboxAddress getReplyTo() {
-        return replyTo;
-    }
-
-    public void setReplyTo(MailboxAddress replyTo) {
-        this.replyTo = replyTo;
-    }
+    public void setReplyTo(MailboxAddress replyTo);
 
 
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
+    public void setSubject(String subject);
 
-    public String getHtml() {
-        return html;
-    }
+    public String getHtml();
 
-    public void setHtml(String html) {
-        this.html = html;
-    }
+    public void setHtml(String html);
 
-    public String getText() {
-        return text;
-    }
+    public String getText();
 
-    public void setText(String text) {
-        this.text = text;
-    }
+    public void setText(String text);
 
-    public void setAttachments(List<Attachment> attachments) {
-        this.attachments = attachments;
-    }
+    public void setAttachments(List<Attachment> attachments);
 
-    public int getSize() {
-        return size;
-    }
+    public int getSize();
 
-    public void setSize(int size) {
-        this.size = size;
-    }
+    public void setSize(int size);
 
-    public void setDisposition(String disposition) {
-        this.disposition = disposition;
-    }
+    public void setDisposition(String disposition);
 
-    public String getDisposition() {
-        return disposition;
-    }
+    public String getDisposition();
 
+    public void setEncoding(String encoding);
 
-    public void setEncoding(String encoding) {
-        this.encoding = encoding;
-    }
+    public String getEncoding();
 
-    public String getEncoding() {
-        return encoding;
-    }
+    public void setContentLanguage(String contentLanguage);
 
-    public void setContentLanguage(String contentLanguage) {
-        this.contentLanguage = contentLanguage;
-    }
+    public String getContentLanguage();
 
-    public String getContentLanguage() {
-        return contentLanguage;
-    }
+    public Map<String, String> getHeaders();
 
-    public Map<String, String> getHeaders() {
-        return headers;
-    }
+    public void setHeaders(Map<String, String> headers);
 
-    public void setHeaders(Map<String, String> headers) {
-        this.headers = headers;
-    }
+    public List<MailboxAddress> getTo();
 
-    public List<MailboxAddress> getTo() {
-        return to;
-    }
+    public void setTo(List<MailboxAddress> to);
 
-    public void setTo(List<MailboxAddress> to) {
-        this.to = to;
-    }
+    public List<MailboxAddress> getCc();
 
-    public List<MailboxAddress> getCc() {
-        return cc;
-    }
+    public void setCc(List<MailboxAddress> cc);
 
-    public void setCc(List<MailboxAddress> cc) {
-        this.cc = cc;
-    }
+    public List<MailboxAddress> getBcc();
 
-    public List<MailboxAddress> getBcc() {
-        return bcc;
-    }
-
-    public void setBcc(List<MailboxAddress> bcc) {
-        this.bcc = bcc;
-    }
+    public void setBcc(List<MailboxAddress> bcc);
 
     /**
      *
      * @return - creates and returns a new instance of StandardMesssage suitable
      * for use as an attached message
      */
-    public StandardMessage instantiateAttachedMessage() {
-        StandardMessage sub = new StandardMessage();   
-        return sub;
-    }
+    public StandardMessage instantiateAttachedMessage();
 
     
 }

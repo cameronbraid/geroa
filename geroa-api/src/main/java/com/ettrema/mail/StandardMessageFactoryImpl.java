@@ -30,8 +30,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
 
     private final static Logger log = LoggerFactory.getLogger(StandardMessageFactoryImpl.class);
 
-    public StandardMessage toStandardMessage(MimeMessage mm) {
-        StandardMessage sm = new StandardMessage();
+    public void toStandardMessage(MimeMessage mm, StandardMessage sm) {
         try {
             sm.setFrom(findFromAddress(mm));
             sm.setReplyTo(findReplyTo(mm));
@@ -58,8 +57,6 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
             } else {
                 log.warn("Unknown content type: " + o.getClass() + ". expected string or MimeMultipart");
             }
-
-            return sm;
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         } catch (MessagingException ex) {
@@ -426,9 +423,13 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
     }
 
     public MimeMessage toMimeMessage(StandardMessage sm, Session session) {
-        try {
-            MimeMessage mm = new MimeMessage(session);
+        MimeMessage mm = new MimeMessage(session);
+        toMimeMessage(sm, mm);
+        return mm;
+    }
 
+    public void toMimeMessage(StandardMessage sm, MimeMessage mm) {
+        try {
             mm.setFrom(sm.getFrom().toInternetAddress());
             fillReplyTo(sm, mm);
             fillTo(sm.getTo(), mm);
@@ -443,9 +444,6 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
             fillRecipients(sm.getBcc(), mm.getRecipients(RecipientType.BCC));
 
             fillContent(sm, mm);
-
-
-            return mm;
         } catch (MessagingException ex) {
             throw new RuntimeException(ex);
         }

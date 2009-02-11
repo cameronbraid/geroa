@@ -47,7 +47,8 @@ public class StandardMessageFactoryImplTest extends TestCase {
         InputStream in = this.getClass().getResourceAsStream("simple-text.smtp");
         assertNotNull(in);
         MimeMessage mm = new MimeMessage(null, in);
-        StandardMessage sm = factory.toStandardMessage(mm);
+        StandardMessage sm = new StandardMessageImpl();
+        factory.toStandardMessage(mm,sm);
         assertEquals("simple message", sm.getSubject());
         assertEquals("text content", sm.getText());
 
@@ -65,10 +66,10 @@ public class StandardMessageFactoryImplTest extends TestCase {
         InputStream in = this.getClass().getResourceAsStream("simple-html.smtp");
         assertNotNull(in);
         MimeMessage mm = new MimeMessage(null, in);
-        StandardMessage sm = factory.toStandardMessage(mm);
+        StandardMessage sm = new StandardMessageImpl();
+        factory.toStandardMessage(mm,sm);
         assertEquals("html message", sm.getSubject());
         assertEquals("html content", sm.getText());
-        System.out.println(sm.getHtml());
         assertTrue(sm.getHtml().contains("<STRONG>content</STRONG>"));
 
         mm = factory.toMimeMessage(sm, session);
@@ -82,9 +83,8 @@ public class StandardMessageFactoryImplTest extends TestCase {
         InputStream in = this.getClass().getResourceAsStream("forward-with-attach.smtp");
         assertNotNull(in);
         MimeMessage mm = new MimeMessage(null, in);
-        System.out.println("&&&&&&&&&&&&& starting parsing");
-        StandardMessage sm = factory.toStandardMessage(mm);
-        System.out.println("&&&&&&&&&&&&& finished parsing");
+        StandardMessage sm = new StandardMessageImpl();
+        factory.toStandardMessage(mm,sm);
         assertEquals("Fw: test4", sm.getSubject());
         //assertEquals(1, sm.getAttachedMessages().size());
 //        System.out.println("sub messages: " + sm.getAttachedMessages().size());
@@ -94,7 +94,6 @@ public class StandardMessageFactoryImplTest extends TestCase {
 //            System.out.println("..");
 //        }
 //        System.out.println("-----------");
-        System.out.println("binary attachments");
         assertEquals(1, sm.getAttachments().size());
         for( Attachment att : sm.getAttachments() ) {
             System.out.println( att.getName() + " - " + att.size() );
@@ -126,7 +125,8 @@ public class StandardMessageFactoryImplTest extends TestCase {
         InputStream in = this.getClass().getResourceAsStream("html-image.smtp");
         assertNotNull(in);
         MimeMessage mm = new MimeMessage(null, in);
-        StandardMessage sm = factory.toStandardMessage(mm);
+        StandardMessage sm = new StandardMessageImpl();
+        factory.toStandardMessage(mm,sm);
         assertEquals("html with images", sm.getSubject());
         assertNotNull(sm.getHtml());
         assertTrue(sm.getHtml().length() > 0);
@@ -138,15 +138,10 @@ public class StandardMessageFactoryImplTest extends TestCase {
         assertNotNull(att.getContentId());
         assertEquals("<0FB995E5A5A642018247136B06623E43@bradsalien>", att.getContentId());
         assertTrue(att.getContentType().contains("image/jpeg"));
-        System.out.println("content type: " + att.getContentType());
-        System.out.println("disposition: " + att.getDisposition());
-        System.out.println("content id: " + att.getContentId());
-        System.out.println("----------------------------------------------");
 
         mm = factory.toMimeMessage(sm, session);
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         mm.writeTo(bout);
-        System.out.println("bout: " + bout.size());
-        System.out.println(bout.toString());
+        //System.out.println(bout.toString());
     }
 }
