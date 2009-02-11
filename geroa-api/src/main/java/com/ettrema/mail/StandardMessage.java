@@ -1,13 +1,8 @@
 package com.ettrema.mail;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,28 +53,6 @@ public class StandardMessage {
 
     public List<Attachment> getAttachments() {
         return attachments;
-    }
-
-
-    public void writeTo(OutputStream out) {
-        try {
-            MimeMessage mm = toMimeMessage(null);
-            mm.writeTo(out);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        } catch (MessagingException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public void fillMimeMessage(MimeMessage msg) {
-        // todo
-    }
-
-    public MimeMessage toMimeMessage(Session session) {
-        MimeMessage mm = new MimeMessage(session);
-        fillMimeMessage(mm);
-        return mm;
     }
 
     public void setFrom(MailboxAddress from) {

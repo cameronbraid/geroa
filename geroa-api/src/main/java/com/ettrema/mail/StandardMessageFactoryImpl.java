@@ -1,11 +1,15 @@
 package com.ettrema.mail;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.Header;
@@ -48,13 +52,12 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
                 String text = (String) o;
                 sm.setText(text);
             } else if (o instanceof MimeMultipart) {
-                log.debug("is multipart");
                 MimeMultipart multi = (MimeMultipart) o;
-                populateMultiPart(multi,sm);
+                populateMultiPart(multi, sm);
 
             } else {
                 log.warn("Unknown content type: " + o.getClass() + ". expected string or MimeMultipart");
-            }            
+            }
 
             return sm;
         } catch (IOException ex) {
@@ -65,43 +68,46 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
     }
 
     protected void populateMultiPart(MimeMultipart multi, StandardMessage sm) throws IOException, MessagingException {
-        System.out.println("-------------------- populateMultiPart -------------------------");
-        String text = "";
-        String html = "";
-        System.out.println("parts: " + multi.getCount());
         for (int i = 0; i < multi.getCount(); i++) {
             BodyPart bp = multi.getBodyPart(i);
             String disp = bp.getDisposition();
-            log.debug("disp: " + disp);
             if ((disp != null) && (disp.equals(Part.ATTACHMENT) || disp.equals(Part.INLINE))) {
-                log.debug("..is attachment");
                 addAttachment(bp, sm.getAttachments());
             } else {
                 String ct = bp.getContentType();
-                log.debug("..content type: " + ct);
                 if (ct.contains("html")) {
-                    html += getStringContent(bp);
+                    if (sm.getHtml() == null) {
+                        sm.setHtml("");
+                    }
+                    String s = sm.getHtml() + getStringContent(bp);
+                    sm.setHtml(s);
                 } else if (ct.contains("text")) {
-                    text += getStringContent(bp);
+                    if (sm.getText() == null) {
+                        sm.setText("");
+                    }
+                    String s = sm.getText() + getStringContent(bp);
+                    sm.setText(s);
                 } else if (ct.contains("multipart")) {
                     Object subMessage = bp.getContent();
-                    System.out.println("..found sub mesage: " + subMessage.getClass()); // TODOOO
-                    if( subMessage instanceof MimeMultipart) {
+                    if (subMessage instanceof MimeMultipart) {
                         MimeMultipart child = (MimeMultipart) subMessage;
-                        StandardMessage smSub = sm.instantiateAttachedMessage();
+                        StandardMessage smSub;
+                        if (ct.contains("related") || ct.contains("alternative") || ct.contains("mixed")) { // accumulate content into current message
+                            smSub = sm;
+                        } else { // otherwise, treat it as an attached message
+                            smSub = sm.instantiateAttachedMessage();
+                            sm.getAttachedMessages().add(smSub);
+                        }
                         populateMultiPart(child, smSub);
-                        sm.getAttachedMessages().add(smSub);
                     } else {
-                        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11 unknown sub message type");
+                        log.warn("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11 unknown sub message type");
                     }
+
                 } else {
-                    // binary
                     addAttachment(bp, sm.getAttachments());
                 }
             }
         }
-        sm.setHtml(html);
-        sm.setText(text);
     }
 
     void addAttachment(BodyPart bp, List<Attachment> attachments) {
@@ -125,6 +131,9 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
     }
 
     void fillRecipients(List<MailboxAddress> to, Address[] recipients) {
+        if (recipients == null) {
+            return;
+        }
         for (Address a : recipients) {
             MailboxAddress ma = MailboxAddress.parse(a.toString());
             to.add(ma);
@@ -143,28 +152,67 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
         }
     }
 
-    protected void fillContent(StandardMessage sm, MimeMessage mm) {
-        try {
-            MimeMultipart multipart = new MimeMultipart("related");
-            if (sm.getText() != null) {
-                BodyPart bp = new MimeBodyPart();
-                bp.setContent(sm.getText(), "text/plain");
-                multipart.addBodyPart(bp);
+    protected void fillContent(StandardMessage sm, Part message) throws MessagingException {
+        if (isText(sm)) {
+            if (isHtml(sm)) {
+                if (hasAttachments(sm)) {
+                    // mixed, then alternate, related for html
+                    MimeMultipart multipart = new MimeMultipart("mixed");
+                    message.setContent(multipart);
+                    addTextAndHtmlToMime(multipart, sm);
+                    addAttachmentsToMime(multipart, sm);
+                } else {
+                    log.debug("text and html. no attachments");
+                    addTextAndHtmlToMime(message, sm);
+                }
+            } else {
+                if (hasAttachments(sm)) {
+                    // just text and attachments
+                    MimeMultipart multipart = new MimeMultipart("mixed");
+                    message.setContent(multipart);
+                    addTextToMime(multipart, sm);
+                    addAttachmentsToMime(multipart, sm);
+                } else {
+                    // no html, no attachments
+                    message.setContent(sm.getText(), "text/plain");
+                }
             }
-            if( sm.getHtml() != null ) {
-                BodyPart bp = new MimeBodyPart();
-                bp.setContent(sm.getHtml(), "text/html");
-                multipart.addBodyPart(bp);
+        } else {
+            if (isHtml(sm)) {
+                if (hasAttachments(sm)) {
+                    // no text, but has html and attachments, so must do mixed
+                    MimeMultipart multipart = new MimeMultipart("mixed");
+                    message.setContent(multipart);
+                    addHtmlToMime(multipart, sm);
+                    addAttachmentsToMime(multipart, sm);
+                } else {
+                    // html only, no text or attachments
+                    addHtmlToMime(message, sm);
+                }
+            } else {
+                if (hasAttachments(sm)) {
+                    // only attachments
+                    MimeMultipart multipart = new MimeMultipart("mixed");
+                    message.setContent(multipart);
+                    addAttachmentsToMime(multipart, sm);
+                } else {
+                    // no text, no html, no attachments - no content
+                    message.setContent("", "text/plain");
+                }
             }
-            if( sm.getAttachments() != null && sm.getAttachments().size() > 0 ) {
-                // todo
-            }
-            if( sm.getAttachedMessages() != null && sm.getAttachedMessages().size() > 0 ) {
-                // todo
-            }
-        } catch (MessagingException e) {
-            throw new RuntimeException(e);
         }
+    }
+
+    protected boolean isText(StandardMessage sm) {
+        return sm.getText() != null && sm.getText().length() > 0;
+    }
+
+    protected boolean isHtml(StandardMessage sm) {
+        return sm.getHtml() != null && sm.getHtml().length() > 0;
+    }
+
+    protected boolean hasAttachments(StandardMessage sm) {
+        return (sm.getAttachments() != null && sm.getAttachments().size() > 0) || (sm.getAttachedMessages() != null && sm.getAttachedMessages().size() > 0);
     }
 
     protected void fillReplyTo(StandardMessage sm, MimeMessage mm) {
@@ -179,6 +227,129 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
         } catch (MessagingException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    private void addAttachmentToMime(MimeMultipart multipart, Attachment att) throws MessagingException {
+        MimeBodyPart bp = new MimeBodyPart();
+
+        DataSource fds = new AttachmentReadingDataSource(att);
+        bp.setDataHandler(new DataHandler(fds));
+        bp.setHeader("Content-ID", att.getContentId());
+        bp.setDisposition(att.getDisposition());
+
+        multipart.addBodyPart(bp);
+    }
+
+    /**
+     * Adds non inline attachments to the multiparts
+     *
+     * @param multipart
+     * @param sm
+     */
+    private void addAttachmentsToMime(MimeMultipart multipart, StandardMessage sm) throws MessagingException {
+        if (sm.getAttachments() != null && sm.getAttachments().size() > 0) {
+            for (Attachment att : sm.getAttachments()) {
+                if( !isInline(att) ) {
+                    addAttachmentToMime(multipart, att);
+                }
+            }
+        }
+        if (sm.getAttachedMessages() != null && sm.getAttachedMessages().size() > 0) {
+            for (StandardMessage smAttached : sm.getAttachedMessages()) {
+                MimeBodyPart bp = new MimeBodyPart();
+                fillContent(smAttached, bp);
+                multipart.addBodyPart(bp);
+            }
+        }
+
+    }
+
+    private void addHtmlToMime(MimeMultipart multipart, StandardMessage sm) throws MessagingException {
+        BodyPart bp = new MimeBodyPart();
+        multipart.addBodyPart(bp);
+        addHtmlToMime(bp, sm);
+    }
+
+    private void addHtmlToMime(Part part, StandardMessage sm) throws MessagingException {
+        List<Attachment> htmlInline = findInlineAttachments(sm);
+        if (htmlInline == null || htmlInline.size() == 0) {
+            part.setContent(sm.getHtml(), "text/html");
+        } else {
+            MimeMultipart related = new MimeMultipart("related");
+            part.setContent(related);
+            BodyPart bpHtml = new MimeBodyPart();
+            bpHtml.setContent(sm.getHtml(), "text/html");
+            related.addBodyPart(bpHtml);
+            for (Attachment att : htmlInline) {
+                addAttachmentToMime(related, att);
+            }
+        }
+    }
+
+    private void addTextAndHtmlToMime(MimeMultipart multipart, StandardMessage sm) throws MessagingException {
+        MimeMultipart alternate = createTextAndHtml(sm);
+        MimeBodyPart bpAlternate = new MimeBodyPart();
+        bpAlternate.setContent(alternate);
+        multipart.addBodyPart(bpAlternate);
+    }
+
+    private void addTextAndHtmlToMime(Part message, StandardMessage sm) throws MessagingException {
+        MimeMultipart alternate = createTextAndHtml(sm);
+        message.setContent(alternate);
+    }
+
+    private MimeMultipart createTextAndHtml(StandardMessage sm) throws MessagingException {
+        MimeMultipart alternate = new MimeMultipart("alternative");
+        MimeBodyPart bpAlternate = new MimeBodyPart();
+        bpAlternate.setContent(alternate);
+
+        addTextToMime(alternate, sm);
+        addHtmlToMime(alternate, sm);
+        return alternate;
+    }
+
+    private void addTextToMime(MimeMultipart multipart, StandardMessage sm) throws MessagingException {
+        BodyPart bp = new MimeBodyPart();
+        bp.setContent(sm.getText(), "text/plain");
+        multipart.addBodyPart(bp);
+    }
+
+    private void fillBCC(List<MailboxAddress> bcc, MimeMessage mm) {
+        fillRecipients(bcc, mm, RecipientType.BCC);
+    }
+
+    private void fillCC(List<MailboxAddress> cc, MimeMessage mm) {
+        fillRecipients(cc, mm, RecipientType.CC);
+    }
+
+    private void fillRecipients(List<MailboxAddress> list, MimeMessage mm, RecipientType type) {
+        for (MailboxAddress ma : list) {
+            try {
+                mm.addRecipient(type, ma.toInternetAddress());
+            } catch (MessagingException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+    }
+
+    private void fillTo(List<MailboxAddress> to, MimeMessage mm) {
+        fillRecipients(to, mm, RecipientType.TO);
+    }
+
+    /**
+     *
+     * @param sm
+     * @return - a list of attachments which have a non empty Content-ID header
+     */
+    private List<Attachment> findInlineAttachments(StandardMessage sm) {
+        if( sm.getAttachments() == null ) return null;
+        List<Attachment> list = new ArrayList<Attachment>();
+        for( Attachment att : sm.getAttachments() ) {
+            if( isInline(att)) {
+                list.add(att);
+            }
+        }
+        return list;
     }
 
     private MailboxAddress findReplyTo(MimeMessage mm) {
@@ -220,7 +391,6 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
     }
 
     String getStringContent(BodyPart bp) {
-        System.out.println("getStringContent");
         try {
             Object o2 = bp.getContent();
             if (o2 == null) {
@@ -261,6 +431,9 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
 
             mm.setFrom(sm.getFrom().toInternetAddress());
             fillReplyTo(sm, mm);
+            fillTo(sm.getTo(), mm);
+            fillCC(sm.getCc(), mm);
+            fillBCC(sm.getBcc(), mm);
             mm.setSubject(sm.getSubject());
             mm.setDisposition(sm.getDisposition());
             fillContentLanguage(sm.getContentLanguage(), mm);
@@ -275,6 +448,35 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
             return mm;
         } catch (MessagingException ex) {
             throw new RuntimeException(ex);
+        }
+    }
+
+    private boolean isInline(Attachment att) {
+        return att.getContentId() != null && att.getContentId().length() > 2;
+    }
+
+    public class AttachmentReadingDataSource implements DataSource {
+
+        final Attachment att;
+
+        public AttachmentReadingDataSource(Attachment att) {
+            this.att = att;
+        }
+
+        public InputStream getInputStream() throws IOException {
+            return att.getInputStream();
+        }
+
+        public OutputStream getOutputStream() throws IOException {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        public String getContentType() {
+            return att.getContentType();
+        }
+
+        public String getName() {
+            return att.getName();
         }
     }
 }

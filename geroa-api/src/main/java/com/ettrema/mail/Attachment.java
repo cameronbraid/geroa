@@ -1,7 +1,9 @@
 package com.ettrema.mail;
 
+import java.io.InputStream;
+
 /**
- *  Represents an attachment to an email
+ *  Represents an attachment to an email, including metadata
  */
 public interface Attachment {
     /**
@@ -22,8 +24,33 @@ public interface Attachment {
     void useData(InputStreamConsumer exec);
 
     /**
+     * This method is necessary for DataSource support, but useData is preferred
+     * 
+     * @return - an inputstream to read from.
+     */
+    InputStream getInputStream();
+
+    /**
      *
      * @return - the size in bytes of the attachment
      */
     int size();
+
+    /**
+     *
+     * @return - the complete content id header Eg <abc123>
+     */
+    String getContentId();
+
+    /**
+     *
+     * @return - the content type header eg text/plain
+     */
+    String getContentType();
+
+    /**
+     *
+     * @return - the disposition for this attachment in a mime message. Eg Part.ATTACHMENT
+     */
+    String getDisposition();
 }

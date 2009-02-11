@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -127,7 +128,7 @@ public class MemoryMailBox implements Mailbox{
         public MemoryMessageResource(MemoryMessageFolder folder, MimeMessage mimeMessage) {
             this.folder = folder;
             this.message = factory.toStandardMessage(mimeMessage);
-            if( message.getText() == null || message.getText().length() == 0 ) throw new IllegalArgumentException("no text content");
+//            if( message.getText() == null || message.getText().length() == 0 ) throw new IllegalArgumentException("no text content");
         }
 
         public void delete() {
@@ -140,7 +141,14 @@ public class MemoryMailBox implements Mailbox{
         }
 
         public void writeTo(OutputStream out) {
-            message.writeTo(out);
+            MimeMessage mm = factory.toMimeMessage(message, null);
+            try {
+                mm.writeTo(out);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (MessagingException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 }

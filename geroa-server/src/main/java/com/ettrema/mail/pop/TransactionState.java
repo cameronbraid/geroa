@@ -6,8 +6,10 @@ import com.ettrema.mail.Message;
 import com.ettrema.mail.MessageFolder;
 import com.ettrema.mail.MessageResource;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Level;
 import javax.mail.Session;
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoSession;
@@ -116,9 +118,20 @@ public class TransactionState extends BaseState {
                 out.flush();
             } catch (Exception e) {
                 log.error("exception sending message", e);
+            } finally {
+                close(out);
             }
             popSession.reply(session, ".");
 
+        }
+    }
+
+    private void close(OutputStream out) {
+        if( out == null ) return ;
+        try {
+            out.close();
+        } catch (IOException ex) {
+            log.warn("",ex);
         }
     }
 

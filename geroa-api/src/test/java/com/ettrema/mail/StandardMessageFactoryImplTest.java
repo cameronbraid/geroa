@@ -9,10 +9,13 @@ import com.bradmcevoy.io.ReadingException;
 import com.bradmcevoy.io.StreamToStream;
 import com.bradmcevoy.io.WritingException;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import junit.framework.TestCase;
 
@@ -22,6 +25,7 @@ import junit.framework.TestCase;
  */
 public class StandardMessageFactoryImplTest extends TestCase {
 
+    Session session;
     StandardMessageFactoryImpl factory;
 
     public StandardMessageFactoryImplTest(String testName) {
@@ -31,6 +35,7 @@ public class StandardMessageFactoryImplTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         factory = new StandardMessageFactoryImpl();
+        session = Session.getDefaultInstance(new Properties());
     }
 
     @Override
@@ -38,16 +43,25 @@ public class StandardMessageFactoryImplTest extends TestCase {
         super.tearDown();
     }
 
-    public void testSimpleText() throws MessagingException {
+    public void testSimpleText() throws MessagingException, IOException {
         InputStream in = this.getClass().getResourceAsStream("simple-text.smtp");
         assertNotNull(in);
         MimeMessage mm = new MimeMessage(null, in);
         StandardMessage sm = factory.toStandardMessage(mm);
         assertEquals("simple message", sm.getSubject());
         assertEquals("text content", sm.getText());
+
+        mm = factory.toMimeMessage(sm, session);
+        assertEquals("simple message", mm.getSubject());
+        assertNotNull(mm.getAllRecipients());
+        assertEquals(1, mm.getAllRecipients().length);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        mm.writeTo(bout);
+        System.out.println("reconstructed simple message size: " + bout.size());
+        System.out.println(bout.toString());
     }
 
-    public void testSimpleHtml() throws Exception {
+    public void atestSimpleHtml() throws Exception {
         InputStream in = this.getClass().getResourceAsStream("simple-html.smtp");
         assertNotNull(in);
         MimeMessage mm = new MimeMessage(null, in);
@@ -56,20 +70,23 @@ public class StandardMessageFactoryImplTest extends TestCase {
         assertEquals("html content", sm.getText());
         System.out.println(sm.getHtml());
         assertTrue(sm.getHtml().contains("<STRONG>content</STRONG>"));
+
+        mm = factory.toMimeMessage(sm, session);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        mm.writeTo(bout);
+        System.out.println("bout: " + bout.size());
+        System.out.println(bout.toString());
     }
 
-    public void testForwardedWithAttachment() throws Exception {
+    public void atestForwardedWithAttach() throws Exception {
         InputStream in = this.getClass().getResourceAsStream("forward-with-attach.smtp");
         assertNotNull(in);
         MimeMessage mm = new MimeMessage(null, in);
+        System.out.println("&&&&&&&&&&&&& starting parsing");
         StandardMessage sm = factory.toStandardMessage(mm);
+        System.out.println("&&&&&&&&&&&&& finished parsing");
         assertEquals("Fw: test4", sm.getSubject());
-        System.out.println("___");
-        System.out.println(sm.getText());
-        System.out.println("----------");
-        System.out.println(sm.getHtml());
-        System.out.println("-----------");
-        assertEquals(1, sm.getAttachedMessages().size());
+        //assertEquals(1, sm.getAttachedMessages().size());
 //        System.out.println("sub messages: " + sm.getAttachedMessages().size());
 //        for( StandardMessage smChild : sm.getAttachedMessages() ) {
 //            System.out.println("::html: " + smChild.getHtml());
@@ -78,6 +95,7 @@ public class StandardMessageFactoryImplTest extends TestCase {
 //        }
 //        System.out.println("-----------");
         System.out.println("binary attachments");
+        assertEquals(1, sm.getAttachments().size());
         for( Attachment att : sm.getAttachments() ) {
             System.out.println( att.getName() + " - " + att.size() );
             att.useData(new InputStreamConsumer() {
@@ -95,5 +113,40 @@ public class StandardMessageFactoryImplTest extends TestCase {
                 }
             });
         }
+
+        mm = factory.toMimeMessage(sm, session);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        mm.writeTo(bout);
+        System.out.println("bout: " + bout.size());
+
+    }
+
+    public void atestHtmlWithImage() throws Exception {
+        System.out.println("---------------- testHtmlWithImage --------------");
+        InputStream in = this.getClass().getResourceAsStream("html-image.smtp");
+        assertNotNull(in);
+        MimeMessage mm = new MimeMessage(null, in);
+        StandardMessage sm = factory.toStandardMessage(mm);
+        assertEquals("html with images", sm.getSubject());
+        assertNotNull(sm.getHtml());
+        assertTrue(sm.getHtml().length() > 0);
+        assertNotNull(sm.getText());
+        assertTrue(sm.getText().length() > 0);
+        assertNotNull(sm.getAttachments());
+        assertEquals(1, sm.getAttachments().size());
+        Attachment att = sm.getAttachments().get(0);
+        assertNotNull(att.getContentId());
+        assertEquals("<0FB995E5A5A642018247136B06623E43@bradsalien>", att.getContentId());
+        assertTrue(att.getContentType().contains("image/jpeg"));
+        System.out.println("content type: " + att.getContentType());
+        System.out.println("disposition: " + att.getDisposition());
+        System.out.println("content id: " + att.getContentId());
+        System.out.println("----------------------------------------------");
+
+        mm = factory.toMimeMessage(sm, session);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        mm.writeTo(bout);
+        System.out.println("bout: " + bout.size());
+        System.out.println(bout.toString());
     }
 }
