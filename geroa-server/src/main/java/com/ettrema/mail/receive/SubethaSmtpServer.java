@@ -1,6 +1,12 @@
 
 package com.ettrema.mail.receive;
 
+import com.ettrema.mail.AcceptEvent;
+import com.ettrema.mail.DeliverEvent;
+import com.ettrema.mail.Event;
+import com.ettrema.mail.Filter;
+import com.ettrema.mail.FilterChain;
+import com.ettrema.mail.LoginEvent;
 import com.ettrema.mail.send.MailSender;
 import com.ettrema.mail.MailResourceFactory;
 import com.ettrema.mail.Mailbox;
@@ -37,16 +43,18 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     private final boolean enableTls;
     private final MailResourceFactory resourceFactory;
     private final MailSender mailSender;
+    private final List<Filter> filters;
 
-    public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, MailSender mailSender) {
+    public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, MailSender mailSender, List<Filter> filters) {
         this.smtpPort = smtpPort;
         this.enableTls = enableTls;
         this.resourceFactory = resourceFactory;
         this.mailSender = mailSender;
+        this.filters = filters;
     }
 
-    public SubethaSmtpServer(MailResourceFactory resourceFactory, MailSender mailSender) {
-        this(25,false,resourceFactory,mailSender);
+    public SubethaSmtpServer(MailResourceFactory resourceFactory, MailSender mailSender, List<Filter> filters) {
+        this(25,false,resourceFactory,mailSender, filters);
     }
 
     
@@ -126,23 +134,32 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
      * Always accept everything when receiving SMTP messages
      */
     public boolean accept(String sFrom, String sRecipient) {
-        System.out.println("accept????");
         log.debug("accept? " + sFrom + " - " +sRecipient);
         if( sFrom == null || sFrom.length() == 0 ) {
             log.error("Cannot accept email with no from address. Recipient is: " + sRecipient);
             return false;
         }
-        MailboxAddress from = MailboxAddress.parse(sFrom);
-        Mailbox fromMailbox = resourceFactory.getMailbox(from);
-        if (fromMailbox != null && !fromMailbox.isEmailDisabled() ) {
-            return true;
-        }
-        MailboxAddress recip = MailboxAddress.parse(sRecipient);
-        Mailbox recipMailbox = resourceFactory.getMailbox(recip);
+        final AcceptEvent event = new AcceptEvent(sFrom, sRecipient);
+        Filter terminal = new Filter() {
 
-        boolean b = (recipMailbox != null && !recipMailbox.isEmailDisabled());
-        log.debug("accept email from: " + sFrom + " to: " + sRecipient + "?" + b);
-        return b;
+            public void doEvent(FilterChain chain, Event e) {
+                MailboxAddress from = MailboxAddress.parse(event.getFrom());
+                Mailbox fromMailbox = resourceFactory.getMailbox(from);
+                if (fromMailbox != null && !fromMailbox.isEmailDisabled() ) {
+                    event.setAccept(true);
+                    return ;
+                }
+                MailboxAddress recip = MailboxAddress.parse(event.getRecipient());
+                Mailbox recipMailbox = resourceFactory.getMailbox(recip);
+
+                boolean b = (recipMailbox != null && !recipMailbox.isEmailDisabled());
+                log.debug("accept email from: " + event.getFrom() + " to: " + event.getRecipient() + "?" + b);
+                event.setAccept(b);
+            }
+        };
+        FilterChain chain = new FilterChain(filters, terminal);
+        chain.doEvent(event);
+        return event.isAccept();
     }
 
     /**
@@ -150,35 +167,46 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
      * be a send request from our domain or an email to our domain
      * 
      */
-    public void deliver(String sFrom, String sRecipient, InputStream data) throws TooMuchDataException, IOException {
+    public void deliver(String sFrom, String sRecipient, final InputStream data) throws TooMuchDataException, IOException {
         log.debug("deliver email from: " + sFrom + " to: " + sRecipient);
         log.debug("email from: " + sFrom + " to: " + sRecipient);
-        try {
-            MailboxAddress from = MailboxAddress.parse(sFrom);
-            MailboxAddress recip = MailboxAddress.parse(sRecipient);
+        final DeliverEvent event = new DeliverEvent(sFrom, sRecipient, data);
+        Filter terminal = new Filter() {
 
-            MimeMessage mm = new SMTPMessage(getSession(), data);
+            public void doEvent(FilterChain chain, Event e) {
+                MailboxAddress from = MailboxAddress.parse(event.getFrom());
+                MailboxAddress recip = MailboxAddress.parse(event.getRecipient());
 
+                MimeMessage mm = parseInput(data);
 
-            Mailbox recipMailbox = resourceFactory.getMailbox(recip);
-            if (recipMailbox != null && !recipMailbox.isEmailDisabled()) {
-                log.debug("recipient is known to us, so store: " + recip);
-                storeMail(recipMailbox,mm);
-            } else {
-                Mailbox fromMailbox = resourceFactory.getMailbox(from);
-                if (fromMailbox != null && !fromMailbox.isEmailDisabled() ) {
-                    log.debug("known from address, so will transmit: from: " + from);
-                    mailSender.sendMail(mm);
+                Mailbox recipMailbox = resourceFactory.getMailbox(recip);
+                if (recipMailbox != null && !recipMailbox.isEmailDisabled()) {
+                    log.debug("recipient is known to us, so store: " + recip);
+                    storeMail(recipMailbox,mm);
                 } else {
-                    throw new NullPointerException("Neither from address nor recipient are known to us. Will not store or send: from: " + sFrom + " to: " + sRecipient);
+                    Mailbox fromMailbox = resourceFactory.getMailbox(from);
+                    if (fromMailbox != null && !fromMailbox.isEmailDisabled() ) {
+                        log.debug("known from address, so will transmit: from: " + from);
+                        mailSender.sendMail(mm);
+                    } else {
+                        throw new NullPointerException("Neither from address nor recipient are known to us. Will not store or send: from: " + event.getFrom() + " to: " + event.getRecipient());
+                    }
                 }
+
             }
+        };
+        FilterChain chain = new FilterChain(filters, terminal);
+        chain.doEvent(event);
+    }
 
-
+    protected MimeMessage parseInput(InputStream data) {
+        try {
+            return new SMTPMessage(getSession(), data);
         } catch (MessagingException ex) {
             throw new RuntimeException(ex);
         }
     }
+
     
     /**
      * Creates the JavaMail Session object for use in WiserMessage
@@ -226,8 +254,21 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         }
         
     }
-    
+
     public boolean doLogin(String username, String password) {
+        final LoginEvent event = new LoginEvent(username, password);
+        Filter terminal = new Filter() {
+
+            public void doEvent(FilterChain chain, Event e) {
+                event.setLoginSuccessful( _doLogin(event.getUsername(), event.getPassword()) );
+            }
+        };
+        FilterChain chain = new FilterChain(filters, terminal);
+        chain.doEvent(event);
+        return event.isLoginSuccessful();
+    }
+
+    public boolean _doLogin(String username, String password) {
         try {
             MailboxAddress userName = MailboxAddress.parse(username);
             Mailbox mbox = resourceFactory.getMailbox(userName);

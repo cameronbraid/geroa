@@ -6,6 +6,7 @@ import com.ettrema.mail.MessageResource;
 import com.ettrema.mail.StandardMessage;
 import com.ettrema.mail.StandardMessageFactory;
 import com.ettrema.mail.StandardMessageFactoryImpl;
+import com.ettrema.mail.StandardMessageImpl;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,7 +16,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -127,8 +127,8 @@ public class MemoryMailBox implements Mailbox{
 
         public MemoryMessageResource(MemoryMessageFolder folder, MimeMessage mimeMessage) {
             this.folder = folder;
-            this.message = factory.toStandardMessage(mimeMessage);
-//            if( message.getText() == null || message.getText().length() == 0 ) throw new IllegalArgumentException("no text content");
+            this.message = new StandardMessageImpl();
+            factory.toStandardMessage(mimeMessage, this.message);
         }
 
         public void delete() {
@@ -136,12 +136,13 @@ public class MemoryMailBox implements Mailbox{
         }
 
         public int size() {
-            int i = message.size();
+            int i = message.getSize();
             return i;
         }
 
         public void writeTo(OutputStream out) {
-            MimeMessage mm = factory.toMimeMessage(message, null);
+            MimeMessage mm = new MimeMessage((Session)null);
+            factory.toMimeMessage(message, mm);
             try {
                 mm.writeTo(out);
             } catch (IOException ex) {

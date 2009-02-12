@@ -1,9 +1,12 @@
 package com.ettrema.mail.pop;
 
 import com.ettrema.mail.*;
+import com.ettrema.mail.FilterChain;
+import com.ettrema.mail.FilterChain;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.List;
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IdleStatus;
 import org.apache.mina.common.IoAcceptor;
@@ -27,14 +30,16 @@ public class MinaPopServer implements PopServer {
     private IoAcceptor acceptor;
     private int popPort;
     private MailResourceFactory resourceFactory;
+    private final List<Filter> filters;
 
-    public MinaPopServer(MailResourceFactory resourceFactory) {
-        this(110, resourceFactory);
+    public MinaPopServer(MailResourceFactory resourceFactory, List<Filter> filters) {
+        this(110, resourceFactory, filters);
     }
 
-    public MinaPopServer(int popPort, MailResourceFactory resourceFactory) {
+    public MinaPopServer(int popPort, MailResourceFactory resourceFactory, List<Filter> filters) {
         this.popPort = popPort;
         this.resourceFactory = resourceFactory;
+        this.filters = filters;
     }
 
     
@@ -95,9 +100,16 @@ public class MinaPopServer implements PopServer {
         }
 
         @Override
-        public void messageReceived(IoSession session, Object msg) throws Exception {
+        public void messageReceived(final IoSession session, final Object msg) throws Exception {
             log.info("pop message: " + msg);
-            sess(session).messageReceived(session, msg);
+            PopMessageEvent event = new PopMessageEvent(session, msg);
+            Filter terminal = new Filter() {
+                public void doEvent(FilterChain chain, Event event) {
+                    sess(session).messageReceived(session, msg);
+                }
+            };
+            FilterChain chain = new FilterChain(filters, terminal);
+            chain.doEvent(event);
         }
 
         @Override
