@@ -3,7 +3,9 @@ package com.ettrema.mail;
 import java.io.OutputStream;
 
 /**
- *
+ *  The minimal interface needed to support basic email functionality. The
+ * interface allows a resource to identify its size, to be deleted, and to be
+ *  written to a client
  */
 public interface MessageResource {
     /**
@@ -16,7 +18,7 @@ public interface MessageResource {
      *
      * @return - the size of the message when formatted as a mime message
      */
-    int size();
+    int getSize();
 
     /**
      * write the message in mime format to the given output stream

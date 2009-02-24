@@ -3,7 +3,7 @@
   	<parent>
   		<groupId>com.ettrema</groupId>
   		<artifactId>geroa</artifactId>
-  		<version>1.0</version>
+  		<version>1.0-SNAPSHOT</version>
   	</parent>
 	<groupId>com.ettrema</groupId>
 	<artifactId>geroa-impl-memory</artifactId>
@@ -13,7 +13,7 @@
 		<dependency>
 			<groupId>com.ettrema</groupId>
 			<artifactId>geroa-api</artifactId>
-			<version>1.0</version>
+			<version>1.0-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>

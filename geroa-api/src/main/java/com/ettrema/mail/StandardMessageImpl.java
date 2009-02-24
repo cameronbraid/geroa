@@ -1,5 +1,6 @@
 package com.ettrema.mail;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -89,10 +90,6 @@ public class StandardMessageImpl implements StandardMessage{
         this.text = text;
     }
 
-    public void setAttachments(List<Attachment> attachments) {
-        this.attachments = attachments;
-    }
-
     public int getSize() {
         return size;
     }
@@ -167,6 +164,12 @@ public class StandardMessageImpl implements StandardMessage{
         StandardMessageImpl sub = new StandardMessageImpl();
         return sub;
     }
+
+    public void addAttachment(String name, String ct, String contentId, InputStream in) {
+        FileSystemAttachment att = new FileSystemAttachment(name, contentId, in, contentId);
+        this.attachments.add(att);
+    }
+
 
     
 }

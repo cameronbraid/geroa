@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.logging.Level;
 import javax.mail.Session;
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoSession;
@@ -24,13 +23,20 @@ public class TransactionState extends BaseState {
     TransactionState(PopSession popSession) {
         super(popSession);
         this.popSession = popSession;
-        inbox = popSession.auth.mbox.getInbox();
-        int num = 1;
-        Collection<MessageResource> messageResources = inbox.getMessages();
         popSession.messages = new ArrayList<Message>();
-        for (MessageResource mr : messageResources) {
-            Message m = new Message(mr, num++);
-            popSession.messages.add(m);
+        inbox = popSession.auth.mbox.getInbox();
+        if( inbox != null ) {
+            int num = 1;
+            Collection<MessageResource> messageResources = inbox.getMessages();
+            if( messageResources != null ) {                
+                for (MessageResource mr : messageResources) {
+                    Message m = new Message(mr, num++);
+                    popSession.messages.add(m);
+                }
+            }
+            log.debug("session messages: " + popSession.messages.size());
+        } else {
+            log.warn("user has no inbox: " + popSession.auth.user + " on resource of type: " + popSession.auth.mbox.getClass());
         }
     }
 
@@ -92,7 +98,17 @@ public class TransactionState extends BaseState {
     }
 
     public void stat(IoSession session, PopSession popSession, String[] args) {
-        popSession.reply(session, "+OK " + popSession.messages.size() + " " + inbox.totalSize());
+        int size = 0;
+        if( inbox != null ) {
+            size = inbox.totalSize();
+        } else {
+            log.warn("No inbox for user: " + popSession.auth.user);
+        }
+        int messages = 0;
+        if( popSession.messages != null ) {
+            messages = popSession.messages.size();
+        }
+        popSession.reply(session, "+OK " + messages + " " + size);
     }
 
     public void retr(final IoSession session, PopSession popSession, String[] args) {

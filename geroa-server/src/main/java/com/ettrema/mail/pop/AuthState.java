@@ -101,4 +101,5 @@ public class AuthState extends BaseState {
     public void auth(IoSession session, PopSession popSession, String[] args) {
         popSession.reply(session, "-ERR not supported");
     }
+
 }

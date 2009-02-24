@@ -69,7 +69,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
             BodyPart bp = multi.getBodyPart(i);
             String disp = bp.getDisposition();
             if ((disp != null) && (disp.equals(Part.ATTACHMENT) || disp.equals(Part.INLINE))) {
-                addAttachment(bp, sm.getAttachments());
+                addAttachment(sm, bp);
             } else {
                 String ct = bp.getContentType();
                 if (ct.contains("html")) {
@@ -101,16 +101,36 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
                     }
 
                 } else {
-                    addAttachment(bp, sm.getAttachments());
+                    addAttachment(sm, bp);
                 }
             }
         }
     }
 
-    void addAttachment(BodyPart bp, List<Attachment> attachments) {
-        FileSystemAttachment att = FileSystemAttachment.parse(bp);
-        attachments.add(att);
+    protected void addAttachment(StandardMessage sm, BodyPart bp) {
+        InputStream in = null;
+        try {
+            String name = bp.getFileName();
+            if (name == null) {
+                name = System.currentTimeMillis() + "";
+            }
+            String ct = bp.getContentType();
+            String[] contentIdArr = bp.getHeader("Content-ID");
+            String contentId = null;
+            if (contentIdArr != null && contentIdArr.length > 0) {
+                contentId = contentIdArr[0];
+            }
+            in = bp.getInputStream();
+            sm.addAttachment(name, ct, contentId, in);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        } catch (MessagingException ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            Utils.close(in);
+        }
     }
+
 
     Map<String, String> findHeaders(MimeMessage mm) {
         try {

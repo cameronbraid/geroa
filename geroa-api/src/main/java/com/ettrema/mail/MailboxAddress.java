@@ -1,12 +1,15 @@
 
 package com.ettrema.mail;
 
+import java.io.Serializable;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-public class MailboxAddress {
+public class MailboxAddress implements Serializable{
     public final String user;
     public final String domain;
+
+    private static final long serialVersionUID = 1L;
 
     public static MailboxAddress parse(String address) throws IllegalArgumentException {
         if( address == null  ) throw new IllegalArgumentException("address argument is null");

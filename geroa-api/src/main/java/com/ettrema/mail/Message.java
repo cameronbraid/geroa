@@ -29,7 +29,7 @@ public class  Message {
     }
 
     public int size() {
-        return resource.size();
+        return resource.getSize();
     }
 
     public MessageResource getResource() {

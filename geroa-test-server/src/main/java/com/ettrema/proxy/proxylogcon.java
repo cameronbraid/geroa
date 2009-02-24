@@ -76,23 +76,28 @@ class proxylogconn extends proxyconn {
             if (b < 0) {
                 b = 256 + b;  // byte is signed type!
             }
-            if (b < ' ' || b > 0x7f) {
-                int d1 = (int) (b >> 6) & 7;
-                b = b & 0x3f;
-                int d2 = (int) (b >> 3) & 7;
-                int d3 = (int) b & 7;
-                s.append("\\" + d1);
-                s.append(d2);
-                s.append(d3);
-            } else if ('\\' == (char) b) {
-                s.append("\\\\");
-            } else {
-                s.append((char) b);
-            }
+            s.append((char) b);
+//            if (b < ' ' || b > 0x7f) {
+//                int d1 = (int) (b >> 6) & 7;
+//                b = b & 0x3f;
+//                int d2 = (int) (b >> 3) & 7;
+//                int d3 = (int) b & 7;
+//                s.append("\\" + d1);
+//                s.append(d2);
+//                s.append(d3);
+//            } else if ('\\' == (char) b) {
+//                s.append("\\\\");
+//            } else {
+//                s.append((char) b);
+//            }
             i++;
-            if (0 == (i - (40 * (i / 40)))) {
-                s.append("\"+\n   \"");
+            if (0 == (i - (400 * (i / 400)))) {
+                s.append("\n");
             }
+
+//            if (0 == (i - (40 * (i / 40)))) {
+//                s.append("\"+\n   \"");
+//            }
         }
         String ss = s.toString();
         System.out.println(ss);

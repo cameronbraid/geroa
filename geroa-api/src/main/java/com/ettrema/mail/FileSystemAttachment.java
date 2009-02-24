@@ -12,7 +12,10 @@ import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 
 /**
+ * In memory representation of a file persisted to disk.
  *
+ * Note that metadata is not persisted to disk, so this class is NOT suitable
+ * for use in production environments, unless supplemented.
  */
 public class FileSystemAttachment implements Attachment, Serializable {
 
@@ -55,6 +58,26 @@ public class FileSystemAttachment implements Attachment, Serializable {
         }
     }
 
+    public FileSystemAttachment(String name, String contentType, InputStream in, String contentId) {
+        FileOutputStream fout = null;
+        try {
+            this.name = name;
+            this.contentType = contentType;
+            this.file = File.createTempFile(name, "attachment");
+            this.contentId = contentId;            
+            fout = new FileOutputStream(file);
+            BufferedOutputStream bout = new BufferedOutputStream(fout);
+            StreamToStream.readTo(in, bout);
+            bout.flush();
+            fout.flush();
+        } catch(Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            Utils.close(fout);
+        }
+
+    }
+
     public FileSystemAttachment(String name, String contentType, File file, String contentId) {
         this.name = name;
         this.contentType = contentType;
@@ -87,9 +110,6 @@ public class FileSystemAttachment implements Attachment, Serializable {
             throw new RuntimeException(file.getAbsolutePath(), e);
         }
     }
-
-
-
 
     public void useData(InputStreamConsumer exec) {
         FileInputStream fin = null;
