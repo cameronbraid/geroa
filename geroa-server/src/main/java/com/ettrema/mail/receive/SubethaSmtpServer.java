@@ -99,8 +99,8 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         CommandHandler cmdHandler = this.smtpReceivingServer.getCommandHandler();
 
         MessageListenerAdapter mla = (MessageListenerAdapter) smtpReceivingServer.getMessageHandlerFactory();
-//        mla.setAuthenticationHandlerFactory(null);
-        mla.setAuthenticationHandlerFactory(new AuthHandlerFactory());
+        mla.setAuthenticationHandlerFactory(null);
+//        mla.setAuthenticationHandlerFactory(new AuthHandlerFactory());
     }
     
     /**

@@ -119,6 +119,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
             String contentId = null;
             if (contentIdArr != null && contentIdArr.length > 0) {
                 contentId = contentIdArr[0];
+                contentId = Utils.parseContentId(contentId);
             }
             in = bp.getInputStream();
             sm.addAttachment(name, ct, contentId, in);

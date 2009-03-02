@@ -25,4 +25,8 @@ public class Utils {
 
         }
     }
+
+    public static String parseContentId(String s) {
+        return null;
+    }
 }
