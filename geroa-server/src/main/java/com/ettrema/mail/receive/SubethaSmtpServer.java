@@ -6,8 +6,6 @@ import com.ettrema.mail.DeliverEvent;
 import com.ettrema.mail.Event;
 import com.ettrema.mail.Filter;
 import com.ettrema.mail.FilterChain;
-import com.ettrema.mail.LoginEvent;
-import com.ettrema.mail.send.MailSender;
 import com.ettrema.mail.MailResourceFactory;
 import com.ettrema.mail.Mailbox;
 import com.ettrema.mail.MailboxAddress;
@@ -22,15 +20,8 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.subethamail.smtp.AuthenticationHandler;
-import org.subethamail.smtp.AuthenticationHandlerFactory;
 import org.subethamail.smtp.MessageListener;
 import org.subethamail.smtp.TooMuchDataException;
-import org.subethamail.smtp.auth.LoginAuthenticationHandler;
-import org.subethamail.smtp.auth.LoginFailedException;
-import org.subethamail.smtp.auth.PlainAuthenticationHandler;
-import org.subethamail.smtp.auth.PluginAuthenticationHandler;
-import org.subethamail.smtp.auth.UsernamePasswordValidator;
 import org.subethamail.smtp.server.CommandHandler;
 import org.subethamail.smtp.server.MessageListenerAdapter;
 import org.subethamail.smtp.server.SMTPServer;
@@ -38,23 +29,21 @@ import org.subethamail.smtp.server.SMTPServer;
 public class SubethaSmtpServer implements MessageListener, SmtpServer {
     private final static Logger log = LoggerFactory.getLogger(SubethaSmtpServer.class);
         
-    private SMTPServer smtpReceivingServer;
-    private final int smtpPort;
-    private final boolean enableTls;
-    private final MailResourceFactory resourceFactory;
-    private final MailSender mailSender;
-    private final List<Filter> filters;
+    protected SMTPServer smtpReceivingServer;
+    protected final int smtpPort;
+    protected final boolean enableTls;
+    protected final MailResourceFactory resourceFactory;
+    protected final List<Filter> filters;
 
-    public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, MailSender mailSender, List<Filter> filters) {
+    public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, List<Filter> filters) {
         this.smtpPort = smtpPort;
         this.enableTls = enableTls;
-        this.resourceFactory = resourceFactory;
-        this.mailSender = mailSender;
+        this.resourceFactory = resourceFactory;        
         this.filters = filters;
     }
 
-    public SubethaSmtpServer(MailResourceFactory resourceFactory, MailSender mailSender, List<Filter> filters) {
-        this(25,false,resourceFactory,mailSender, filters);
+    public SubethaSmtpServer(MailResourceFactory resourceFactory, List<Filter> filters) {
+        this(25,false,resourceFactory, filters);
     }
 
     
@@ -75,7 +64,7 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         smtpReceivingServer = null;
     }
 
-    private String getSubjectDontThrow(MimeMessage mm) {
+    protected String getSubjectDontThrow(MimeMessage mm) {
         try {
             return mm.getSubject();
         } catch (MessagingException ex) {
@@ -83,7 +72,7 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         }
     }
     
-    private void initSmtpReceiver() {
+    protected void initSmtpReceiver() {
         Collection<MessageListener> listeners = new ArrayList<MessageListener>(1);
         listeners.add(this);
 
@@ -100,38 +89,13 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
 
         MessageListenerAdapter mla = (MessageListenerAdapter) smtpReceivingServer.getMessageHandlerFactory();
         mla.setAuthenticationHandlerFactory(null);
-//        mla.setAuthenticationHandlerFactory(new AuthHandlerFactory());
     }
     
-    /**
-     * 
-     * @return - the session used by the mail sender. can be used to build smtpmessage objects
-     */
-    public Session getSmtpSendSession() {
-        return mailSender.getSession();
-    }
-
     
-    /**
-     * Sends the message assuming that this mimemessage was constructed on the MailSender's
-     * session
-     * 
-     * @param mm
-     */
-    public void sendMail(MimeMessage mm) {
-        mailSender.sendMail(mm);
-    }
-    
-    public void sendMail(String fromAddress, String fromPersonal,List<String> to, String replyTo, String subject, String text) {
-        mailSender.sendMail(fromAddress, fromPersonal, to, replyTo, subject, text);
-    }
-    
-
             
     /**
      * Subetha.MessageListener
      * 
-     * Always accept everything when receiving SMTP messages
      */
     public boolean accept(String sFrom, String sRecipient) {
         log.debug("accept? " + sFrom + " - " +sRecipient);
@@ -143,12 +107,6 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         Filter terminal = new Filter() {
 
             public void doEvent(FilterChain chain, Event e) {
-                MailboxAddress from = MailboxAddress.parse(event.getFrom());
-                Mailbox fromMailbox = resourceFactory.getMailbox(from);
-                if (fromMailbox != null && !fromMailbox.isEmailDisabled() ) {
-                    event.setAccept(true);
-                    return ;
-                }
                 MailboxAddress recip = MailboxAddress.parse(event.getRecipient());
                 Mailbox recipMailbox = resourceFactory.getMailbox(recip);
 
@@ -180,18 +138,8 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
                 MimeMessage mm = parseInput(data);
 
                 Mailbox recipMailbox = resourceFactory.getMailbox(recip);
-                if (recipMailbox != null && !recipMailbox.isEmailDisabled()) {
-                    log.debug("recipient is known to us, so store: " + recip);
-                    storeMail(recipMailbox,mm);
-                } else {
-                    Mailbox fromMailbox = resourceFactory.getMailbox(from);
-                    if (fromMailbox != null && !fromMailbox.isEmailDisabled() ) {
-                        log.debug("known from address, so will transmit: from: " + from);
-                        mailSender.sendMail(mm);
-                    } else {
-                        throw new NullPointerException("Neither from address nor recipient are known to us. Will not store or send: from: " + event.getFrom() + " to: " + event.getRecipient());
-                    }
-                }
+                log.debug("recipient is known to us, so store: " + recip);
+                storeMail(recipMailbox,mm);
 
             }
         };
@@ -207,85 +155,18 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         }
     }
 
-    
-    /**
-     * Creates the JavaMail Session object for use in WiserMessage
-     */
-    protected Session getSession() {
-        return mailSender.getSession();
+    protected  Session getSession() {
+        return null;
     }
 
-    private void storeMail(Mailbox recipMailbox, MimeMessage mm) {
+    
+    protected void storeMail(Mailbox recipMailbox, MimeMessage mm) {
         try {
             recipMailbox.storeMail(mm);
         } catch (Throwable e) {
             String subject = getSubjectDontThrow(mm);
             log.error("Exception storing mail. mailbox: " + recipMailbox.getClass() + " message: " + subject,e);
         }
-    }
-
-    /**
-     * Creates the AuthHandlerFactory which logs the user/pass.
-     */
-    public class AuthHandlerFactory implements AuthenticationHandlerFactory {
-
-        public AuthenticationHandler create() {
-            PluginAuthenticationHandler ret = new PluginAuthenticationHandler();
-            UsernamePasswordValidator validator = new UsernamePasswordValidator() {
-
-                public void login(String username, String password) throws LoginFailedException {
-                    boolean loginOk = doLogin(username, password);
-                    if (!loginOk) {
-                        throw new LoginFailedException("authentication failed");
-                    }
-
-                }
-            };
-            ret.addPlugin(new PlainAuthenticationHandler(validator));
-            ret.addPlugin(new LoginAuthenticationHandler(validator));
-            return ret;
-        }
-    }
-    
-    public class MySmtpMessage extends SMTPMessage {
-        public MySmtpMessage(Session session, MimeMessage mm) throws MessagingException {
-            super(mm);
-            this.session = session;
-        }
-        
-    }
-
-    public boolean doLogin(String username, String password) {
-        final LoginEvent event = new LoginEvent(username, password);
-        Filter terminal = new Filter() {
-
-            public void doEvent(FilterChain chain, Event e) {
-                event.setLoginSuccessful( _doLogin(event.getUsername(), event.getPassword()) );
-            }
-        };
-        FilterChain chain = new FilterChain(filters, terminal);
-        chain.doEvent(event);
-        return event.isLoginSuccessful();
-    }
-
-    public boolean _doLogin(String username, String password) {
-        try {
-            MailboxAddress userName = MailboxAddress.parse(username);
-            Mailbox mbox = resourceFactory.getMailbox(userName);
-            if (mbox == null) {
-                log.debug("user not found");
-                return false;
-            }
-            if (!mbox.authenticate(password)) {
-                log.debug("authentication failed");
-                return false;
-            }
-            return true;
-        } catch (IllegalArgumentException ex) {
-            log.debug("username could not be parsed. use form user@domain.com");
-            return false;
-        }
-
     }
 
     public int getSmtpPort() {
@@ -296,11 +177,9 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         return enableTls;
     }
 
-    public MailSender getMailSender() {
-        return mailSender;
-    }
-
     public MailResourceFactory getResourceFactory() {
         return resourceFactory;
     }
+
+
 }

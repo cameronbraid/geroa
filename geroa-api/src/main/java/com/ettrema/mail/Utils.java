@@ -27,6 +27,10 @@ public class Utils {
     }
 
     public static String parseContentId(String s) {
-        return null;
+        int pos = s.indexOf('<');
+        if( pos >= 0 ) s = s.substring(pos+1);
+        pos = s.lastIndexOf('>');
+        if( pos > 0 ) s = s.substring(0, pos);
+        return s;
     }
 }
