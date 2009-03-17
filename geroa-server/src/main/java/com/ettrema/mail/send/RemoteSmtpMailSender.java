@@ -73,7 +73,7 @@ public class RemoteSmtpMailSender implements MailSender {
             throw new RuntimeException("This mail sender is stopped");
         }
         try {
-            log.debug("sending to: " + host + " - " + user + " - " + password);
+            log.debug("sending to: " + host);
             Transport tr = getSession().getTransport("smtp");
             tr.connect(host, port, user, password);
             mm.saveChanges();

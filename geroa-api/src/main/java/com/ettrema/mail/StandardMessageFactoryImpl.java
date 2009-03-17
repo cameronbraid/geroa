@@ -459,12 +459,8 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
             mm.setSubject(sm.getSubject());
             mm.setDisposition(sm.getDisposition());
             fillContentLanguage(sm.getContentLanguage(), mm);
-
-            fillRecipients(sm.getTo(), mm.getRecipients(RecipientType.TO));
-            fillRecipients(sm.getCc(), mm.getRecipients(RecipientType.CC));
-            fillRecipients(sm.getBcc(), mm.getRecipients(RecipientType.BCC));
-
             fillContent(sm, mm);
+            // todo: set headers?
         } catch (MessagingException ex) {
             throw new RuntimeException(ex);
         }
@@ -473,6 +469,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
     private boolean isInline(Attachment att) {
         return att.getContentId() != null && att.getContentId().length() > 2;
     }
+
 
     public class AttachmentReadingDataSource implements DataSource {
 

@@ -7,20 +7,49 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 public class MailboxAddress implements Serializable{
-    public final String user;
-    public final String domain;
-    public final String personal;
 
     private static final long serialVersionUID = 1L;
+
+    static String removeSurroundingDelimiters(String p, String delim1, String delim2) {
+        int pos = p.indexOf(delim1);
+        if (pos >= 0) {
+            p = p.substring(pos + 1);
+        }
+        pos = p.indexOf(delim2);
+        if (pos >= 0) {
+            p = p.substring(0, pos);
+        }
+        return p;
+    }
 
     public static MailboxAddress parse(String address) throws IllegalArgumentException {
         if( address == null  ) throw new IllegalArgumentException("address argument is null");
         if( address.length() == 0 ) throw new IllegalArgumentException("address argument is empty");
-                    
-        String[] arr = address.split("[@]");
-        if( arr.length != 2 ) throw new IllegalArgumentException("Not a valid email address: " + address);
-        return new MailboxAddress(arr[0], arr[1]);                
+
+        int posOpenBracket = address.indexOf("<");
+        if( posOpenBracket > 0 ) {
+            String p = address.substring(0, posOpenBracket-1);
+            p = removeSurroundingDelimiters(p, "\"", "\"");
+
+            String add = address.substring(posOpenBracket+1);
+            add = removeSurroundingDelimiters(add, "<", ">");
+            String[] arr = add.split("[@]");
+            if( arr.length != 2 ) throw new IllegalArgumentException("Not a valid email address: " + address);
+            return new MailboxAddress(arr[0], arr[1],p);
+        } else {
+            String[] arr = address.split("[@]");
+            if( arr.length != 2 ) throw new IllegalArgumentException("Not a valid email address: " + address);
+            return new MailboxAddress(arr[0], arr[1]);
+        }
     }
+
+    public final String user;
+    public final String domain;
+    public final String personal;
+
+
+
+
 
     public MailboxAddress(String user, String domain, String personal) {
         this.user = user;
