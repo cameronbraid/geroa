@@ -5,6 +5,12 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 /**
+ * Implements high level abstraction on sending emails. The actual message 
+ * transmission might be done via smtp relay, direct smtp transmission to 
+ * recipient domains, etc
+ * 
+ * Sending might be synchronous or asynchronous, so successful completion of
+ * a call should not be taken to assume successful delivery
  *
  * @author brad
  */
@@ -14,8 +20,21 @@ public interface MailSender {
 
     public void stop();
     
+    /**
+     * 
+     * @param fromAddress
+     * @param fromPersonal
+     * @param to
+     * @param replyTo
+     * @param subject
+     * @param text
+     */
     public void sendMail(String fromAddress, String fromPersonal, List<String> to, String replyTo, String subject, String text);
-    
+
+    /**
+     *
+     * @return - a mail session object suitable for constructing and sending messages
+     */
     public Session getSession();
     
     /**
@@ -24,8 +43,19 @@ public interface MailSender {
      * @param mm
      */
     public void sendMail(MimeMessage mm);
-    
+
+    /**
+     * create a new message which is a logical clone of the one given
+     *
+     * @param mm
+     * @return
+     */
     public MimeMessage newMessage(MimeMessage mm);
-    
+
+    /**
+     * create a new mimemessage on the current session
+     *
+     * @return
+     */
     public MimeMessage newMessage();
 }
