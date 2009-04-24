@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -112,7 +113,7 @@ public class MemoryMailBox implements Mailbox{
         public int totalSize() {
             int size = 0;
             for( MessageResource res : messages ) {
-                size += res.size();
+                size += res.getSize();
             }
             log.debug("total size: " + size);
             return size;
@@ -150,6 +151,10 @@ public class MemoryMailBox implements Mailbox{
             } catch (MessagingException ex) {
                 throw new RuntimeException(ex);
             }
+        }
+
+        public int getSize() {
+            return message.getSize();
         }
     }
 }

@@ -49,6 +49,8 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
             Object o = mm.getContent();
             if (o instanceof String) {
                 String text = (String) o;
+                log.debug( "text: " + text );
+
                 sm.setText(text);
             } else if (o instanceof MimeMultipart) {
                 MimeMultipart multi = (MimeMultipart) o;
@@ -289,6 +291,27 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
     }
 
     private void addHtmlToMime(Part part, StandardMessage sm) throws MessagingException {
+
+			// need to use a javax.activation.DataSource (!) to set a text
+			// with content type "text/html"
+//			part.setDataHandler(new DataHandler(
+//			    new DataSource() {
+//						public InputStream getInputStream() throws IOException {
+//							return new ByteArrayInputStream(encoding != null ? text.getBytes(encoding) : text.getBytes());
+//						}
+//						public OutputStream getOutputStream() throws IOException {
+//							throw new UnsupportedOperationException("Read-only javax.activation.DataSource");
+//						}
+//						public String getContentType() {
+//							return "text/html";
+//						}
+//						public String getName() {
+//							return "text";
+//						}
+//			    }
+//			));
+
+
         List<Attachment> htmlInline = findInlineAttachments(sm);
         if (htmlInline == null || htmlInline.size() == 0) {
             part.setContent(sm.getHtml(), "text/html");
@@ -409,17 +432,19 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
     }
 
     String getStringContent(BodyPart bp) {
+        String text;
         try {
             Object o2 = bp.getContent();
             if (o2 == null) {
-                return "";
-            }
-            if (o2 instanceof String) {
-                return (String) o2;
+                text = "";
+            } else if (o2 instanceof String) {
+                text = (String) o2;
             } else {
                 log.warn("Unknown content type: " + o2.getClass());
-                return o2.toString();
+                text = o2.toString();
             }
+            log.debug( "getStringContent: " + text);
+            return text;
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         } catch (MessagingException ex) {
@@ -452,6 +477,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
     public void toMimeMessage(StandardMessage sm, MimeMessage mm) {
         try {
             mm.setFrom(sm.getFrom().toInternetAddress());
+
             fillReplyTo(sm, mm);
             fillTo(sm.getTo(), mm);
             fillCC(sm.getCc(), mm);
@@ -488,6 +514,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
         }
 
         public String getContentType() {
+            log.debug( "attachment conte type: " + att.getContentType());
             return att.getContentType();
         }
 

@@ -13,18 +13,33 @@
 
     <bean id="popServer" class="com.ettrema.mail.pop.MinaPopServer">
         <constructor-arg ref="mailResourceFactory" />
+        <constructor-arg >
+            <list />
+        </constructor-arg>
     </bean>
 
     <bean id="mailSender" class="com.ettrema.mail.send.AspirinMailSender" />
 
     <bean id="smtpServer" class="com.ettrema.mail.receive.SubethaSmtpServer" >
         <constructor-arg ref="mailResourceFactory" />
+        <constructor-arg >
+            <list />
+        </constructor-arg>
+    </bean>
+
+    <!-- The Mail Submission Agent. Runs on port 587-->
+    <bean id="msaSmtpServer" class="com.ettrema.mail.receive.AuthenticatedSmtpServer" >
+        <constructor-arg ref="mailResourceFactory" />
         <constructor-arg ref="mailSender" />
+        <constructor-arg >
+            <list />
+        </constructor-arg>
     </bean>
 
     <bean id="mailServer" class="com.ettrema.mail.MailServer">
         <constructor-arg ref="mailSender" />
         <constructor-arg ref="smtpServer" />
         <constructor-arg ref="popServer" />
+        <constructor-arg ref="msaSmtpServer" />
     </bean>
 </beans>

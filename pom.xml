@@ -67,4 +67,16 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+    <repositories>
+        <repository>
+          <id>ettrema-repo</id>
+          <url>http://www.ettrema.com/maven2</url>
+        </repository>
+        <repository>
+            <!-- needed for java2html -->
+            <id>mvnrepository.com</id>
+            <name>mvnrepository.com</name>
+            <url>http://www.mvnrepository.com/artifacts</url>
+        </repository>
+    </repositories>
 </project>

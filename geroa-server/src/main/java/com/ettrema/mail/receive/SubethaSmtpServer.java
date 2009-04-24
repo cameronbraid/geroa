@@ -149,7 +149,10 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
 
     protected MimeMessage parseInput(InputStream data) {
         try {
-            return new SMTPMessage(getSession(), data);
+            MimeMessage mm = new MimeMessage( getSession(), data );
+            log.debug( "encoding: " + mm.getEncoding());
+            return mm;
+            //return new SMTPMessage(getSession(), data);
         } catch (MessagingException ex) {
             throw new RuntimeException(ex);
         }

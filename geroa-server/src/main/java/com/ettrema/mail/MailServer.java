@@ -56,6 +56,19 @@ public class MailServer {
      * in which case that service will be unavailable
      *
      * @param mailSender
+     * @param smtpServer
+     * @param popServer
+     */
+    public MailServer(MailSender mailSender, SmtpServer smtpServer, PopServer popServer) {
+        this(mailSender, smtpServer, popServer, null);
+
+    }
+
+    /**
+     * Create the mail server witht the given components. Any of these may be null,
+     * in which case that service will be unavailable
+     *
+     * @param mailSender
      * @param smtpServer - for inter-server transmission
      * @param popServer
      * @param msaSmtpServer - MSA agent, for mail submission from end users
