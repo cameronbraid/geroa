@@ -67,6 +67,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
     }
 
     protected void populateMultiPart(MimeMultipart multi, StandardMessage sm) throws IOException, MessagingException {
+        log.debug( "populateMultiPart: content type: " + multi.getContentType());
         for (int i = 0; i < multi.getCount(); i++) {
             BodyPart bp = multi.getBodyPart(i);
             String disp = bp.getDisposition();
@@ -117,6 +118,7 @@ public class StandardMessageFactoryImpl implements StandardMessageFactory {
                 name = System.currentTimeMillis() + "";
             }
             String ct = bp.getContentType();
+            log.debug( "attachment content type: " + ct);
             String[] contentIdArr = bp.getHeader("Content-ID");
             String contentId = null;
             if (contentIdArr != null && contentIdArr.length > 0) {

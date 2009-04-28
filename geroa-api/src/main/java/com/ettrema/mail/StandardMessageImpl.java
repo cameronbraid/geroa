@@ -166,7 +166,7 @@ public class StandardMessageImpl implements StandardMessage{
     }
 
     public void addAttachment(String name, String ct, String contentId, InputStream in) {
-        FileSystemAttachment att = new FileSystemAttachment(name, contentId, in, contentId);
+        FileSystemAttachment att = new FileSystemAttachment(name, ct, in, contentId);
         this.attachments.add(att);
     }
 

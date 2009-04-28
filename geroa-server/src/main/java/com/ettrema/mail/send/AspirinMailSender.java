@@ -1,5 +1,8 @@
 package com.ettrema.mail.send;
 
+import com.ettrema.mail.StandardMessage;
+import com.ettrema.mail.StandardMessageFactory;
+import com.ettrema.mail.StandardMessageFactoryImpl;
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.List;
@@ -125,5 +128,12 @@ public class AspirinMailSender implements MailSender, MailWatcher {
     public void stop() {
         this.started = false;
         MailQue.removeWatcher(this);
+    }
+
+    public void sendMail( StandardMessage sm ) {
+        StandardMessageFactory smf = new StandardMessageFactoryImpl();
+        MimeMessage mm  = newMessage();
+        smf.toMimeMessage( sm, mm );
+        sendMail( mm );
     }
 }

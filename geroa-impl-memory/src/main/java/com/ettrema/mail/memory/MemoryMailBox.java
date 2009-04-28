@@ -66,16 +66,16 @@ public class MemoryMailBox implements Mailbox{
 
     public void storeMail(MimeMessage mm) {
 
-        try {
-            File f = new File("c:\\test.smtp");
-            FileOutputStream fos = new FileOutputStream(f);
-            mm.writeTo(fos);
-            fos.close();
-        } catch (IOException iOException) {
-            iOException.printStackTrace();
-        } catch (MessagingException messagingException) {
-            messagingException.printStackTrace();
-        }
+//        try {
+//            File f = new File("c:\\test.smtp");
+//            FileOutputStream fos = new FileOutputStream(f);
+//            mm.writeTo(fos);
+//            fos.close();
+//        } catch (IOException iOException) {
+//            iOException.printStackTrace();
+//        } catch (MessagingException messagingException) {
+//            messagingException.printStackTrace();
+//        }
 
         MemoryMessageFolder folder = (MemoryMessageFolder) getInbox();
         MemoryMessageResource res = new MemoryMessageResource(folder, mm);

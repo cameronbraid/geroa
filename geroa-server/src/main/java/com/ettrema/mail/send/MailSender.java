@@ -1,5 +1,6 @@
 package com.ettrema.mail.send;
 
+import com.ettrema.mail.StandardMessage;
 import java.util.List;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -43,6 +44,14 @@ public interface MailSender {
      * @param mm
      */
     public void sendMail(MimeMessage mm);
+
+    /**
+     * Sends the given standard message. This will usually be firt converted
+     * to a MimeMessage by the default StandardMessageFactory implementation
+     * 
+     * @param mm
+     */
+    public void sendMail(StandardMessage sm);
 
     /**
      * create a new message which is a logical clone of the one given

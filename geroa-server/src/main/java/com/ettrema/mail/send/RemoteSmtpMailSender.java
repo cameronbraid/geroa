@@ -1,5 +1,8 @@
 package com.ettrema.mail.send;
 
+import com.ettrema.mail.StandardMessage;
+import com.ettrema.mail.StandardMessageFactory;
+import com.ettrema.mail.StandardMessageFactoryImpl;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Properties;
@@ -14,6 +17,13 @@ import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Sends emails via a remote SMTP server. This is often useful if you're email
+ * server is running in a server which is blacklisted by spam lists, so you
+ * need to relay through a trusted email server.
+ * 
+ * @author brad
+ */
 public class RemoteSmtpMailSender implements MailSender {
 
     private final static Logger log = LoggerFactory.getLogger(RemoteSmtpMailSender.class);
@@ -82,6 +92,13 @@ public class RemoteSmtpMailSender implements MailSender {
         } catch (MessagingException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public void sendMail( StandardMessage sm ) {
+        StandardMessageFactory smf = new StandardMessageFactoryImpl();
+        MimeMessage mm  = newMessage();
+        smf.toMimeMessage( sm, mm );
+        sendMail( mm );
     }
 
     public Session getSession() {

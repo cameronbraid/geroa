@@ -41,7 +41,6 @@ public interface StandardMessage {
 
     public void setReplyTo(MailboxAddress replyTo);
 
-
     public void setSubject(String subject);
 
     public String getHtml();

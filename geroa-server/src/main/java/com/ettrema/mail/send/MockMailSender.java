@@ -1,5 +1,8 @@
 package com.ettrema.mail.send;
 
+import com.ettrema.mail.StandardMessage;
+import com.ettrema.mail.StandardMessageFactory;
+import com.ettrema.mail.StandardMessageFactoryImpl;
 import com.sun.mail.smtp.SMTPMessage;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +44,15 @@ public class MockMailSender implements MailSender{
     public void sendMail(MimeMessage mm) {
         sentMimeMessages.add(mm);
     }
+
+    public void sendMail( StandardMessage sm ) {
+        StandardMessageFactory smf = new StandardMessageFactoryImpl();
+        MimeMessage mm  = newMessage();
+        smf.toMimeMessage( sm, mm );
+        sendMail( mm );
+    }
+
+
 
     public MimeMessage newMessage(MimeMessage mm) {
         try {
