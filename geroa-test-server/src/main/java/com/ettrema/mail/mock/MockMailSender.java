@@ -1,5 +1,6 @@
 package com.ettrema.mail.mock;
 
+import com.ettrema.mail.StandardMessage;
 import com.ettrema.mail.send.MailSender;
 import java.util.List;
 import javax.mail.Session;
@@ -29,5 +30,9 @@ public class MockMailSender implements MailSender {
 
     public MimeMessage newMessage() {
         return null;
+    }
+
+    public void sendMail( StandardMessage sm ) {
+
     }
 }
