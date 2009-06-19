@@ -1,6 +1,7 @@
 package com.ettrema.mail.mock;
 
 import com.ettrema.mail.MailServer;
+import com.ettrema.mail.memory.MemoryMailResourceFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -25,5 +26,11 @@ public class GeroaTestServer {
         mailServer = (MailServer) context.getBean("mailServer");
         mailServer.start();
         System.out.println("mock server is running on smtp port: " + mailServer.getSmtpServer().getSmtpPort() + " and pop port: " + mailServer.getPopServer().getPopPort());
+    }
+
+    public void startHardCoded() {
+        MemoryMailResourceFactory rf = new MemoryMailResourceFactory();
+        mailServer = new MailServer( rf );
+        mailServer.start();
     }
 }

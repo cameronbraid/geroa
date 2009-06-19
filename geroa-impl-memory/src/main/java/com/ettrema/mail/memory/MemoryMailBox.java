@@ -2,23 +2,10 @@ package com.ettrema.mail.memory;
 
 import com.ettrema.mail.Mailbox;
 import com.ettrema.mail.MessageFolder;
-import com.ettrema.mail.MessageResource;
-import com.ettrema.mail.StandardMessage;
 import com.ettrema.mail.StandardMessageFactory;
 import com.ettrema.mail.StandardMessageFactoryImpl;
-import com.ettrema.mail.StandardMessageImpl;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +25,6 @@ public class MemoryMailBox implements Mailbox{
     public MemoryMailBox() {
         folders = new HashMap<String, MessageFolder>();
         MemoryMessageFolder folder = addFolder("inbox");
-//        for( int i=0; i<50; i++) {
-//            addMockMessage(folder, "hi there " + i); // todo: move this to test config
-//        }
         this.password = "password";
     }
 
@@ -65,20 +49,8 @@ public class MemoryMailBox implements Mailbox{
     }
 
     public void storeMail(MimeMessage mm) {
-
-//        try {
-//            File f = new File("c:\\test.smtp");
-//            FileOutputStream fos = new FileOutputStream(f);
-//            mm.writeTo(fos);
-//            fos.close();
-//        } catch (IOException iOException) {
-//            iOException.printStackTrace();
-//        } catch (MessagingException messagingException) {
-//            messagingException.printStackTrace();
-//        }
-
         MemoryMessageFolder folder = (MemoryMessageFolder) getInbox();
-        MemoryMessageResource res = new MemoryMessageResource(folder, mm);
+        MemoryMessageResource res = new MemoryMessageResource(folder, mm, factory);
         folder.messages.add(res);
     }
 
@@ -86,75 +58,5 @@ public class MemoryMailBox implements Mailbox{
         MemoryMessageFolder folder = new MemoryMessageFolder();
         folders.put(name,folder);
         return folder;
-    }
-
-    private void addMockMessage(MemoryMessageFolder folder, String subject) {
-        try {
-            MimeMessage msg = new MimeMessage((Session) null);
-            msg.setSubject(subject);
-            folder.messages.add(new MemoryMessageResource(folder, msg));
-        } catch (MessagingException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public class MemoryMessageFolder implements MessageFolder {
-
-        List<MessageResource> messages = new ArrayList<MessageResource>();
-
-        public Collection<MessageResource> getMessages() {
-            return messages;
-        }
-
-        public int numMessages() {
-            return messages.size();
-        }
-
-        public int totalSize() {
-            int size = 0;
-            for( MessageResource res : messages ) {
-                size += res.getSize();
-            }
-            log.debug("total size: " + size);
-            return size;
-        }
-
-    }
-
-    public class MemoryMessageResource implements MessageResource {
-
-        MemoryMessageFolder folder;
-        StandardMessage message;
-
-        public MemoryMessageResource(MemoryMessageFolder folder, MimeMessage mimeMessage) {
-            this.folder = folder;
-            this.message = new StandardMessageImpl();
-            factory.toStandardMessage(mimeMessage, this.message);
-        }
-
-        public void delete() {
-            folder.messages.remove(this);
-        }
-
-        public int size() {
-            int i = message.getSize();
-            return i;
-        }
-
-        public void writeTo(OutputStream out) {
-            MimeMessage mm = new MimeMessage((Session)null);
-            factory.toMimeMessage(message, mm);
-            try {
-                mm.writeTo(out);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            } catch (MessagingException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        public int getSize() {
-            return message.getSize();
-        }
     }
 }
