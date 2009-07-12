@@ -9,11 +9,15 @@ import java.util.List;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public class MockMailSender implements MailSender{
+
+    private final static Logger log = LoggerFactory.getLogger(MockMailSender.class);
 
     private boolean isStarted;
     private final List<SentMessage> sentMessages  = new ArrayList<SentMessage>();
@@ -35,6 +39,7 @@ public class MockMailSender implements MailSender{
     public void sendMail(String fromAddress, String fromPersonal, List<String> to, String replyTo, String subject, String text) {
         SentMessage msg = new SentMessage(fromAddress, fromPersonal, to, replyTo, subject, text);
         sentMessages.add(msg);
+        System.out.println( "sentMessages: " + sentMessages.size() );
     }
 
     public Session getSession() {
@@ -46,6 +51,8 @@ public class MockMailSender implements MailSender{
     }
 
     public void sendMail( StandardMessage sm ) {
+        log.debug( "sendMail: subject: " + sm.getSubject());
+        System.out.println( "sending email" );
         StandardMessageFactory smf = new StandardMessageFactoryImpl();
         MimeMessage mm  = newMessage();
         smf.toMimeMessage( sm, mm );

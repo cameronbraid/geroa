@@ -9,7 +9,6 @@ import com.ettrema.mail.FilterChain;
 import com.ettrema.mail.MailResourceFactory;
 import com.ettrema.mail.Mailbox;
 import com.ettrema.mail.MailboxAddress;
-import com.sun.mail.smtp.SMTPMessage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -36,10 +35,12 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     protected final List<Filter> filters;
 
     public SubethaSmtpServer(int smtpPort, boolean enableTls, MailResourceFactory resourceFactory, List<Filter> filters) {
+        if( resourceFactory ==null ) throw new RuntimeException( "Configuration problem. resourceFactory cannot be null");
         this.smtpPort = smtpPort;
         this.enableTls = enableTls;
-        this.resourceFactory = resourceFactory;        
+        this.resourceFactory = resourceFactory;
         this.filters = filters;
+        log.debug( "filters: " + filters.size());
     }
 
     public SubethaSmtpServer(MailResourceFactory resourceFactory, List<Filter> filters) {
