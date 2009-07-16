@@ -4,6 +4,7 @@ import com.ettrema.mail.*;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoAcceptor;
@@ -35,6 +36,10 @@ public class MinaPopServer implements PopServer {
         this.popPort = popPort;
         this.resourceFactory = resourceFactory;
         this.filters = filters;
+    }
+
+    public MinaPopServer(int popPort, MailResourceFactory resourceFactory, Filter filter) {
+        this( popPort, resourceFactory, Arrays.asList( filter));
     }
 
     
