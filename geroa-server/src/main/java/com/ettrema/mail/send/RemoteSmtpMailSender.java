@@ -121,6 +121,7 @@ public class RemoteSmtpMailSender implements MailSender {
     }
 
     public void start() {
+        log.debug( "started the service");
         this.started = true;
     }
 
