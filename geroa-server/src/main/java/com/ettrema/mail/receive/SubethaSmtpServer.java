@@ -61,7 +61,11 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
     }
 
     public void stop() {
-        smtpReceivingServer.stop();
+        try {
+            smtpReceivingServer.stop();
+        } catch( Exception e ) {
+            log.debug( "exception stopping smtp receiver: " + e.getMessage()); // probably interrupted ex
+        }
         smtpReceivingServer = null;
     }
 
