@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>CUSTOM-install deploy-all:deploy-all</actionName>
+            <displayName>install deploy-all:deploy-all</displayName>
+            <goals>
+                <goal>install</goal>
+                <goal>deploy-all:deploy-all</goal>
+            </goals>
+        </action>
+        <action>
+            <actionName>CUSTOM-deploy</actionName>
+            <displayName>deploy</displayName>
+            <goals>
+                <goal>deploy</goal>
+            </goals>
+        </action>
+        <action>
+            <actionName>CUSTOM-javadoc:javadoc</actionName>
+            <displayName>javadoc:javadoc</displayName>
+            <goals>
+                <goal>javadoc:javadoc</goal>
+            </goals>
+        </action>
+    </actions>
