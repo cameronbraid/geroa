@@ -22,4 +22,19 @@
                 <goal>javadoc:javadoc</goal>
             </goals>
         </action>
+        <action>
+            <actionName>CUSTOM-deploy parent</actionName>
+            <displayName>deploy parent</displayName>
+            <recursive>false</recursive>
+            <goals>
+                <goal>install</goal>
+            </goals>
+        </action>
+        <action>
+            <actionName>CUSTOM-site</actionName>
+            <displayName>site</displayName>
+            <goals>
+                <goal>site</goal>
+            </goals>
+        </action>
     </actions>
