@@ -23,4 +23,12 @@
                 <exec.executable>java</exec.executable>
             </properties>
         </action>
+        <action>
+            <actionName>CUSTOM-run</actionName>
+            <displayName>run</displayName>
+            <goals>
+                <goal>compile</goal>
+                <goal>exec:exec</goal>
+            </goals>
+        </action>
     </actions>
