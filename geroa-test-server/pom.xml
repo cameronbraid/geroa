@@ -23,24 +23,27 @@
                     </arguments>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.ettrema</groupId>
-			<artifactId>geroa-api</artifactId>
-			<version>1.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.ettrema</groupId>
 			<artifactId>geroa-server</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.ettrema</groupId>
 			<artifactId>geroa-impl-memory</artifactId>
-			<version>1.0-SNAPSHOT</version>
+			<version>${project.version}</version>
 		</dependency>
 
         <dependency>
@@ -55,3 +58,4 @@
         </dependency>
 	</dependencies>
 </project>
+

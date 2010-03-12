@@ -3,12 +3,11 @@ package com.ettrema.mail.pop;
 import com.ettrema.mail.Event;
 import com.ettrema.mail.Filter;
 import com.ettrema.mail.FilterChain;
-import com.ettrema.mail.PopMessageEvent;
-import org.apache.mina.common.IdleStatus;
-import org.apache.mina.common.IoHandlerAdapter;
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.TransportType;
-import org.apache.mina.transport.socket.nio.SocketSessionConfig;
+import org.apache.mina.core.service.IoHandlerAdapter;
+import org.apache.mina.core.service.TransportMetadata;
+import org.apache.mina.core.session.IdleStatus;
+import org.apache.mina.core.session.IoSession;
+import org.apache.mina.transport.socket.SocketSessionConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,10 +45,8 @@ public class PopIOHandlerAdapter extends IoHandlerAdapter {
     @Override
     public void sessionCreated(IoSession session) throws Exception {
         log.info("Session created...");
-        if (session.getTransportType() == TransportType.SOCKET) {
-            ((SocketSessionConfig) session.getConfig()).setReceiveBufferSize(2048);
-        }
-        session.setIdleTime(IdleStatus.BOTH_IDLE, 10);
+        ((SocketSessionConfig) session.getConfig()).setReceiveBufferSize(2048);
+        ((SocketSessionConfig) session.getConfig()).setIdleTime(IdleStatus.BOTH_IDLE, 10);
         PopSession sess = new PopSession(session, server.resourceFactory);
         session.setAttribute("stateMachine", sess);
     }

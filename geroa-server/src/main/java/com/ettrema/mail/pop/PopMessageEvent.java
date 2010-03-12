@@ -1,6 +1,7 @@
-package com.ettrema.mail;
+package com.ettrema.mail.pop;
 
-import org.apache.mina.common.IoSession;
+import com.ettrema.mail.Event;
+import org.apache.mina.core.session.IoSession;
 
 /**
  *
@@ -18,7 +19,7 @@ public class PopMessageEvent implements Event {
         return msg;
     }
 
-    public IoSession getSession() {
+    public IoSession getSession() { 
         return session;
     }
 }

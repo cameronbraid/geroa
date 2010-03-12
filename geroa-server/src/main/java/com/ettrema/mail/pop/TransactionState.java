@@ -10,8 +10,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.mail.Session;
-import org.apache.mina.common.ByteBuffer;
-import org.apache.mina.common.IoSession;
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +124,7 @@ public class TransactionState extends BaseState {
             ChunkWriter store = new ChunkWriter() {
 
                 public void newChunk(int i, byte[] data) {
-                    ByteBuffer bb = ByteBuffer.wrap(data);
+                    IoBuffer bb = IoBuffer.wrap(data);
                     session.write(bb);
                 }
             };

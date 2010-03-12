@@ -1,6 +1,6 @@
 package com.ettrema.mail.pop;
 
-import org.apache.mina.common.IoSession;
+import org.apache.mina.core.session.IoSession;
 
 public class GreetingState implements PopState {
 

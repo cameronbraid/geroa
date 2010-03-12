@@ -1,7 +1,7 @@
 package com.ettrema.mail.pop;
 
 import com.ettrema.mail.Message;
-import org.apache.mina.common.IoSession;
+import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,10 +18,12 @@ public class UpdateState implements PopState {
     }
 
     public void enter(IoSession session, PopSession popSession) {
-        for (Message m : popSession.messages) {
-            if (m.isMarkedForDeletion()) {
-                log.debug("deleting: " + m.getId() );
-                m.getResource().delete();
+        if( popSession.messages != null ) {
+            for (Message m : popSession.messages) {
+                if (m.isMarkedForDeletion()) {
+                    log.debug("deleting: " + m.getId() );
+                    m.getResource().delete();
+                }
             }
         }
         popSession.reply(session, "+OK");

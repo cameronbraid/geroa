@@ -6,16 +6,15 @@ import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.mina.common.ByteBuffer;
-import org.apache.mina.common.IoAcceptor;
-import org.apache.mina.common.IoSession;
-import org.apache.mina.common.SimpleByteBufferAllocator;
-import org.apache.mina.filter.LoggingFilter;
-import org.apache.mina.filter.StreamWriteFilter;
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.buffer.SimpleBufferAllocator;
+import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
-import org.apache.mina.transport.socket.nio.SocketAcceptor;
-import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
+import org.apache.mina.filter.logging.LoggingFilter;
+import org.apache.mina.filter.stream.StreamWriteFilter;
+import org.apache.mina.transport.socket.SocketAcceptor;
+import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +22,7 @@ public class MinaPopServer implements PopServer {
 
     private final static Logger log = LoggerFactory.getLogger(MinaPopServer.class);
 
-    private IoAcceptor acceptor;
+    private SocketAcceptor acceptor;
     private int popPort;
     MailResourceFactory resourceFactory;
     final List<Filter> filters;
@@ -45,19 +44,19 @@ public class MinaPopServer implements PopServer {
     
     
     public void start() {
-        ByteBuffer.setUseDirectBuffers(false);
-        ByteBuffer.setAllocator(new SimpleByteBufferAllocator());
+        IoBuffer.setUseDirectBuffer(false);
+        IoBuffer.setAllocator(new SimpleBufferAllocator());
 
-        acceptor = new SocketAcceptor();
+        acceptor = new NioSocketAcceptor();
 
-        SocketAcceptorConfig cfg = new SocketAcceptorConfig();
 //        cfg.getFilterChain().addLast("mimemessage1", new MimeMessageIOFilter() );
-        cfg.getFilterChain().addLast("logger", new LoggingFilter());        
-        cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("US-ASCII"))));
-        cfg.getFilterChain().addLast("stream", new StreamWriteFilter() );
+        acceptor.getFilterChain().addLast("logger", new LoggingFilter());
+        acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("US-ASCII"))));
+        acceptor.getFilterChain().addLast("stream", new StreamWriteFilter() );
+        acceptor.setHandler( new PopIOHandlerAdapter(this) );
         try {
             //cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
-            acceptor.bind(new InetSocketAddress(popPort), new PopIOHandlerAdapter(this), cfg);
+            acceptor.bind(new InetSocketAddress(popPort));
         } catch (IOException ex) {
             throw new RuntimeException("Couldnt bind to port: " + popPort, ex);
         }
@@ -65,7 +64,7 @@ public class MinaPopServer implements PopServer {
     }
 
     public void stop() {
-        acceptor.unbindAll();
+        acceptor.unbind();
         acceptor = null;
     }
 
