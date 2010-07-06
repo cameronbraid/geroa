@@ -88,6 +88,16 @@ public class MailboxAddress implements Serializable{
             throw new RuntimeException(ex);
         }
     }
-    
-    
+
+    public String getPersonal() {
+        return personal;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public String getUser() {
+        return user;
+    }        
 }
