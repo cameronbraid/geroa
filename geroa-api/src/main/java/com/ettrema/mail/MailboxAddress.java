@@ -67,10 +67,14 @@ public class MailboxAddress implements Serializable{
     @Override
     public String toString() {
         if( personal == null ) {
-            return user + "@" + domain;
+            return toPlainAddress();
         } else {
-            return "\"" + personal + "\"" + " <" + user + "@" + domain + ">";
+            return "\"" + personal + "\"" + " <" + toPlainAddress() + ">";
         }
+    }
+
+    public String toPlainAddress() {
+        return user + "@" + domain;
     }
 
     public InternetAddress toInternetAddress() {
@@ -89,15 +93,31 @@ public class MailboxAddress implements Serializable{
         }
     }
 
-    public String getPersonal() {
-        return personal;
-    }
-
     public String getDomain() {
         return domain;
     }
 
+    public String getPersonal() {
+        return personal;
+    }
+
     public String getUser() {
         return user;
-    }        
+    }
+
+    /**
+     * Returns a representative name for this address. This is the personal
+     * portion if present, otherwise it is the user portion.
+     * 
+     * @return
+     */
+    public String getDisplayName() {
+        if( personal != null && personal.length() > 0 ) {
+            return personal;
+        } else {
+            return user;
+        }
+    }
+    
+    
 }
