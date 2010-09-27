@@ -2,12 +2,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.ettrema</groupId>
 	<artifactId>geroa</artifactId>
-	<version>1.1</version>
+	<version>1.2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Geroa Mail Library</name>
 	<url>http://milton.ettrema.com</url>
 	<scm>
-		<connection>scm:svn:svn://www.ettrema.com/geroa/tags/geroa-1.1</connection>
+		<connection>scm:svn:svn://www.ettrema.com/geroa/tags/geroa-1.2</connection>
 	</scm>
     <distributionManagement>
         <repository>
