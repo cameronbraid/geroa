@@ -3,7 +3,7 @@
   	<parent>
   		<groupId>com.ettrema</groupId>
   		<artifactId>geroa</artifactId>
-  		<version>1.1-SNAPSHOT</version>
+  		<version>1.1</version>
   	</parent>
 	<groupId>com.ettrema</groupId>
 	<artifactId>geroa-test-server</artifactId>
@@ -18,7 +18,7 @@
                     <executable>java</executable>
                     <arguments>
                         <argument>-classpath</argument>
-                        <classpath/>
+                        <classpath />
                         <argument>com.ettrema.mail.mock.GeroaTestServer</argument>
                     </arguments>
                 </configuration>
