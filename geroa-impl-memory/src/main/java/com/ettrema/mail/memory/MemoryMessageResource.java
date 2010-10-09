@@ -29,7 +29,7 @@ public class MemoryMessageResource implements MessageResource {
         factory.toStandardMessage( mimeMessage, this.message );
     }
 
-    public void delete() {
+    public void deleteMessage() {
         folder.messages.remove( this );
     }
 
