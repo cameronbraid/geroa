@@ -57,7 +57,7 @@ public class SubethaSmtpServer implements MessageListener, SmtpServer {
         } catch (Throwable e) {
             throw new RuntimeException("Exception starting SMTP server. port: " + this.smtpReceivingServer.getPort() + " address: " + this.smtpReceivingServer.getBindAddress(), e);
         }
-        log.info("Conjola email server started.");
+        log.info("Geroa email server started.");
     }
 
     public void stop() {
