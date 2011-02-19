@@ -1,14 +1,15 @@
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.ettrema</groupId>
-	<artifactId>geroa</artifactId>
-	<version>1.2-SNAPSHOT</version>
-	<packaging>pom</packaging>
-	<name>Geroa Mail Library</name>
-	<url>http://milton.ettrema.com</url>
-	<scm>
-		<connection>scm:svn:svn://www.ettrema.com/geroa/tags/geroa-1.2</connection>
-	</scm>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.ettrema</groupId>
+    <artifactId>geroa</artifactId>
+    <version>1.2</version>
+    <packaging>pom</packaging>
+    <name>Geroa Mail Library</name>
+    <url>http://milton.ettrema.com</url>
+    <scm>
+        <connection>scm:svn:svn://www.ettrema.com/geroa/tags/geroa-1.2</connection>
+    </scm>
     <distributionManagement>
         <repository>
             <id>ettrema-repo</id>
@@ -21,53 +22,55 @@
         </snapshotRepository>
     </distributionManagement>
 
-	<developers>
-		<developer>
-			<name>Brad McEvoy</name>
-			<timezone>GMT+12</timezone>
-		</developer>
-	</developers>
-	<modules>
-		<module>geroa-api</module>
-		<module>geroa-test-server</module>
-		<module>geroa-server</module>
+    <developers>
+        <developer>
+            <name>Brad McEvoy</name>
+            <timezone>GMT+12</timezone>
+        </developer>
+    </developers>
+    <modules>
+        <module>geroa-api</module>
+        <!--
+        <module>geroa-test-server</module>
+        -->
+        <module>geroa-server</module>
         <module>geroa-impl-memory</module>
-		<module>geroa-impl-filesystem</module>
-	</modules>
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>1.5</source>
-					<target>1.5</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<artifactId>maven-source-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
-	<dependencies>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+        <module>geroa-impl-filesystem</module>
+    </modules>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.1</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
     <repositories>
         <repository>
-          <id>ettrema-repo</id>
-          <url>http://www.ettrema.com/maven2</url>
+            <id>ettrema-repo</id>
+            <url>http://www.ettrema.com/maven2</url>
         </repository>
         <repository>
             <!-- needed for java2html -->
