@@ -22,7 +22,7 @@ public class UpdateState implements PopState {
             for (Message m : popSession.messages) {
                 if (m.isMarkedForDeletion()) {
                     log.debug("deleting: " + m.getId() );
-                    m.getResource().delete();
+                    m.getResource().deleteMessage();
                 }
             }
         }

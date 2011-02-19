@@ -9,9 +9,9 @@ import java.io.OutputStream;
  */
 public interface MessageResource {
     /**
-     * physically delete the resource
+     * physically deleteMessage the resource
      */
-    void delete();
+    void deleteMessage();
 
     /**
      *
