@@ -8,7 +8,7 @@
     <name>Geroa Mail Library</name>
     <url>http://milton.ettrema.com</url>
     <scm>
-        <connection>scm:svn:svn://www.ettrema.com/geroa/tags/geroa-1.2</connection>
+        <connection>scm:svn:http://svn.ettrema.com/svn/geroa/trunk</connection>
     </scm>
     <distributionManagement>
         <repository>
