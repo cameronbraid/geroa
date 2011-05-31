@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.ettrema</groupId>
     <artifactId>geroa</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3</version>
     <packaging>pom</packaging>
     <name>Geroa Mail Library</name>
     <url>http://milton.ettrema.com</url>
     <scm>
-        <connection>scm:svn:http://svn.ettrema.com/svn/geroa/trunk</connection>
+        <connection>scm:svn:http://svn.ettrema.com/svn/geroa/tags/geroa-1.3</connection>
     </scm>
     <distributionManagement>
         <repository>
