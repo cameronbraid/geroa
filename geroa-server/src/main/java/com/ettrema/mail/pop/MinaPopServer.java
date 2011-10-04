@@ -24,8 +24,8 @@ public class MinaPopServer implements PopServer {
 
     private SocketAcceptor acceptor;
     private int popPort;
-    MailResourceFactory resourceFactory;
-    final List<Filter> filters;
+    private MailResourceFactory resourceFactory;
+    private final List<Filter> filters;
 
     public MinaPopServer(MailResourceFactory resourceFactory, List<Filter> filters) {
         this(110, resourceFactory, filters);
@@ -53,7 +53,7 @@ public class MinaPopServer implements PopServer {
         acceptor.getFilterChain().addLast("logger", new LoggingFilter());
         acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("US-ASCII"))));
         acceptor.getFilterChain().addLast("stream", new StreamWriteFilter() );
-        acceptor.setHandler( new PopIOHandlerAdapter(this) );
+        acceptor.setHandler( new PopIOHandlerAdapter(resourceFactory, filters) );
         try {
             //cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
             acceptor.bind(new InetSocketAddress(popPort));
