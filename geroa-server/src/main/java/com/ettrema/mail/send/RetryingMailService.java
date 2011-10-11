@@ -1,12 +1,16 @@
 package com.ettrema.mail.send;
 
 import com.ettrema.mail.StandardMessage;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
-import javax.mail.Session;
-import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +20,9 @@ import org.slf4j.LoggerFactory;
  * 
  * Can optionally callback when an email is sent or has failed
  * 
+ * Note that this class is intended to provide feedback about whether emails
+ * were delivered or not, so it is not appropriate to use it with a MailSender
+ * which buffers messages for sending.
  *
  * @author brad
  */
@@ -23,6 +30,7 @@ public class RetryingMailService {
 
 	private final static Logger log = LoggerFactory.getLogger(RetryingMailService.class);
 	private final MailSender mailSender;
+	private Map<UUID,SendJob> mapOfJobs = new ConcurrentHashMap<UUID, SendJob>();
 	private DelayQueue<DelayMessage> delayQueue = new DelayQueue<DelayMessage>();
 	private boolean running;
 	private Consumer consumer;
@@ -60,9 +68,37 @@ public class RetryingMailService {
 	}
 
 	public void sendMail(StandardMessage sm, EmailResultCallback callback) {
-		DelayMessage dm = new DelayMessage(sm, callback);
+		DelayMessage dm = new DelayMessage(null, sm, callback);
 		delayQueue.add(dm);
 		log.info("Queue size is now: " + delayQueue.size());
+	}
+
+	/**
+	 * Submit the list of emails to send and return a UUID identifying this job
+	 * 
+	 * @param sm
+	 * @param callback
+	 * @return 
+	 */
+	public UUID sendMails(List<StandardMessage> msgs, EmailResultCallback callback) {
+		List<DelayMessage> list = new ArrayList<DelayMessage>();
+		SendJob sendJob = new SendJob();
+		for (StandardMessage sm  : msgs) {
+			DelayMessage dm = new DelayMessage(sendJob, sm, callback);
+			list.add(dm);
+		}
+		
+		mapOfJobs.put(sendJob.id, sendJob);
+		
+		for(DelayMessage dm : sendJob.msgs) {
+			delayQueue.add(dm);
+		}
+		log.info("Queue size is now: " + delayQueue.size());
+		return sendJob.id;
+	}
+	
+	public SendJob getJob(UUID id) {
+		return mapOfJobs.get(id);
 	}
 
 	private class Consumer implements Runnable {
@@ -89,15 +125,24 @@ public class RetryingMailService {
 			log.info("Attempt to send: " + dm);
 			try {
 				send(dm);
+				dm.completedOk = true;
 				dm.callback.onSuccess(dm.sm);
 			} catch (Throwable e) {
 				dm.onFailed(e);
 				if (dm.attempts <= maxRetries) {
 					log.info("Failed to send message: " + dm + " will retry in " + dm.getDelayMillis() / 1000 + "seconds");
+					dm.failed = true;
 					queue.add(dm);
 				} else {
 					log.error("Failed to send message: " + dm + " Exceeded retry attempts: " + dm.attempts + ", will not retry");
 					dm.callback.onFailed(dm.sm, dm.lastException);
+				}
+			} finally {
+				// If there is a sendJob, and all emails are sent, then call the finished callback
+				if( dm.sendJob != null ) {
+					if( dm.sendJob.checkComplete() ) {						
+						dm.callback.finished(dm.sendJob.id, dm.sendJob.msgs);
+					}
 				}
 			}
 		}
@@ -107,14 +152,37 @@ public class RetryingMailService {
 		}
 	}
 
-	public class DelayMessage implements Delayed {
+	public class SendJob {
 
+		private Collection<DelayMessage> msgs;
+		private final UUID id;
+
+		public SendJob() {
+			this.id = UUID.randomUUID();
+		}
+
+		private boolean checkComplete() {
+			for( DelayMessage dm : msgs) {
+				boolean isComplete = dm.completedOk || dm.failed;
+				if( !isComplete ) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+
+	public class DelayMessage implements Delayed {
+		private final SendJob sendJob;
 		private final StandardMessage sm;
 		private final EmailResultCallback callback;
 		private int attempts;
+		private boolean completedOk;
+		private boolean failed;
 		private Throwable lastException;
 
-		public DelayMessage(StandardMessage sm, EmailResultCallback callback) {
+		public DelayMessage(SendJob sendJob, StandardMessage sm, EmailResultCallback callback) {
+			this.sendJob = sendJob;
 			this.sm = sm;
 			this.callback = callback;
 		}
@@ -152,6 +220,29 @@ public class RetryingMailService {
 				return attempts * 1000 * 60 * 60l; // attempts x hours Eg 5 attempts means a delay of 5 hours
 			}
 		}
+
+		public boolean isCompletedOk() {
+			return completedOk;
+		}
+
+		/**
+		 * True if we've given up
+		 * 
+		 * @return 
+		 */
+		public boolean isFatal() {
+			return failed;
+		}
+
+		public int getAttempts() {
+			return attempts;
+		}
+
+		public Throwable getLastException() {
+			return lastException;
+		}
+		
+		
 	}
 
 	public interface EmailResultCallback {
@@ -159,5 +250,7 @@ public class RetryingMailService {
 		void onSuccess(StandardMessage sm);
 
 		void onFailed(StandardMessage sm, Throwable lastException);
+
+		void finished(UUID id, Collection<DelayMessage> msgs);
 	}
 }
