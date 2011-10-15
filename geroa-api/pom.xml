@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.ettrema</groupId>
         <artifactId>geroa</artifactId>
-        <version>1.4</version>
+        <version>1.5-SNAPSHOT</version>
     </parent>
     <groupId>com.ettrema</groupId>
     <artifactId>geroa-api</artifactId>
